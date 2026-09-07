@@ -146,6 +146,8 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="ClearScene.cpp" />
+    <ClCompile Include="EnemyElete.cpp" />
+    <ClCompile Include="EnemyNormal.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -159,6 +161,8 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="ClearScene.h" />
+    <ClInclude Include="EnemyElete.h" />
+    <ClInclude Include="EnemyNormal.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Input.h" />

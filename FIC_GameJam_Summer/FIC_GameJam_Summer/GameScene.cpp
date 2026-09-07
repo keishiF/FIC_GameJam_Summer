@@ -153,7 +153,7 @@ void GameScene::NormalDraw()
 	}
 
 	// 残弾数の表示
-	DrawFormatString(20, 40, 0xffffff, "残弾: %d", m_remainingBullets);
+	DrawFormatString(0, 40, 0xffffff, "残弾: %d", m_remainingBullets);
 
 #ifdef _DEBUG
 	// 点滅効果のための条件
