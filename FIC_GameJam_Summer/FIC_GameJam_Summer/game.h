@@ -1,8 +1,15 @@
 #pragma once
 
-// 画面情報を定数定義
-constexpr int kScreenWidth = 1280;
-constexpr int kScreenHeight = 720;
-constexpr int kColorBItNum = 32;
+namespace Game
+{
+	// ウィンドウモード設定
+	constexpr bool kDefaultWindowMode = true;
 
-constexpr bool kDefaultWindowMode = true;
+	// ウィンドウ名
+	const char* kTitleText = "ゲーム名";
+
+	// ウィンドウサイズ
+	constexpr int kScreenWidth = 1280;
+	constexpr int kScreenHeight = 720;
+	constexpr int kColorBitNum = 32;
+}

@@ -1,42 +1,28 @@
-#include "DxLib.h"
-#include "game.h"
+#include <DxLib.h>
+#include "Application.h"
 
 // プログラムは WinMain から始まります
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	// フルスクリーンではなく、ウインドウモードで開くようにする
-	ChangeWindowMode(kDefaultWindowMode);
-	// 画面のサイズを変更する
-	SetGraphMode(kScreenWidth, kScreenHeight, kColorBItNum);
+	Application& app = Application::GetInstance();
 
-	if (DxLib_Init() == -1)		// ＤＸライブラリ初期化処理
+#ifdef _DEBUG
+	AllocConsole();                                        // コンソール
+	FILE* out = 0; freopen_s(&out, "CON", "w", stdout); // stdout
+	FILE* in = 0; freopen_s(&in, "CON", "r", stdin);   // stdin
+#endif
+
+	// アプリケーションの初期化
+	if (!app.Init())
 	{
-		return -1;			// エラーが起きたら直ちに終了
-	}
-	// 描画先を裏画面にする
-	SetDrawScreen(DX_SCREEN_BACK);
-
-	// ゲームループ
-	while (ProcessMessage() == 0)	// Windowsが行う処理を待つ必要がある
-	{
-		// 今回のループが始まった時間を覚えておく
-		LONGLONG time = GetNowHiPerformanceCount();
-
-		// 画面全体をクリアする
-		ClearDrawScreen();
-
-		// ここにゲームの処理を書く
-
-		// 画面の切り替わりを待つ必要がある
-		ScreenFlip();	// 1/60秒経過するまで待つ
-
-		// FPS(Frame Per Second)60に固定
-		while (GetNowHiPerformanceCount() - time < 16667)
-		{
-		}
+		return -1;
 	}
 
-	DxLib_End();				// ＤＸライブラリ使用の終了処理
+	// メインループ
+	app.Run();
+
+	// 後処理
+	app.Terminate();
 
 	return 0;				// ソフトの終了 
 }
