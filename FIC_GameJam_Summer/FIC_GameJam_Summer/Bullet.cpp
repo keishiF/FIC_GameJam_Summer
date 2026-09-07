@@ -1,5 +1,6 @@
 ﻿#include "Bullet.h"
 #include "game.h"
+#include <cmath>
 #include <DxLib.h>
 
 namespace
@@ -8,6 +9,10 @@ namespace
 	constexpr int kBulletWidth = 256;
 	constexpr int kBulletHeight = 64;
 	constexpr int kAnimInterval = 4;	// 何フレームごとにアニメーションのコマを切り替えるか
+
+	// 当たり判定用のサイズ(見た目より小さめにして判定を厳しくしすぎない)
+	constexpr float kCollisionHalfWidth = 40.0f;
+	constexpr float kCollisionHalfHeight = 16.0f;
 }
 
 Bullet::Bullet(float startX, float startY, const std::vector<int>& animHandles) :
@@ -17,12 +22,10 @@ Bullet::Bullet(float startX, float startY, const std::vector<int>& animHandles) 
 	m_x(startX),
 	m_y(startY),
 	m_isActive(true)
-{
-}
+{}
 
 Bullet::~Bullet()
-{
-}
+{}
 
 void Bullet::Update()
 {
@@ -60,4 +63,17 @@ void Bullet::Draw() const
 		static_cast<int>(m_y - kBulletHeight / 2.0f),
 		m_animHandles[m_animFrame],
 		true);
+}
+
+bool Bullet::CheckHit(float targetX, float targetY, float targetHalfWidth, float targetHalfHeight) const
+{
+	if (!m_isActive)
+	{
+		return false;
+	}
+
+	bool overlapX = std::abs(m_x - targetX) < (kCollisionHalfWidth + targetHalfWidth);
+	bool overlapY = std::abs(m_y - targetY) < (kCollisionHalfHeight + targetHalfHeight);
+
+	return overlapX && overlapY;
 }

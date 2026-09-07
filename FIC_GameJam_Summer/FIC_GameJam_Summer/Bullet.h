@@ -13,6 +13,11 @@ public:
 
 	bool IsActive() const { return m_isActive; }
 
+	// 対象との当たり判定(AABB)
+	bool CheckHit(float targetX, float targetY, float targetHalfWidth, float targetHalfHeight) const;
+
+	void Deactivate() { m_isActive = false; }
+
 private:
 	const std::vector<int>& m_animHandles;
 
