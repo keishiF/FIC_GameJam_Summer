@@ -1,7 +1,7 @@
 ﻿#include "game.h"
-#include "GameScene.h"
 #include "Input.h"
 #include "SceneController.h"
+#include "StageSelectScene.h"
 #include "TitleScene.h"
 #include <cassert>
 #include <DxLib.h>
@@ -19,8 +19,8 @@ TitleScene::TitleScene(SceneController& controller) :
 	m_update(&TitleScene::FadeInUpdate),
 	m_draw(&TitleScene::FadeDraw)
 {
-	m_titleHandle = LoadGraph("Data/UI/.png");
-	assert(m_titleHandle >= 0);
+	/*m_titleHandle = LoadGraph("Data/UI/.png");
+	assert(m_titleHandle >= 0);*/
 }
 
 TitleScene::~TitleScene()
@@ -40,6 +40,8 @@ void TitleScene::Draw()
 
 void TitleScene::NormalUpdate()
 {
+	++m_blinkFrame;
+
 	if (Input::GetInstance().IsPress("OK"))
 	{
 		m_update = &TitleScene::FadeOutUpdate;
@@ -61,7 +63,7 @@ void TitleScene::FadeOutUpdate()
 {
 	if (m_fadeFrame++ >= kFadeInterval)
 	{
-		m_controller.ChangeScene(std::make_shared<GameScene>(m_controller));
+		m_controller.ChangeScene(std::make_shared<StageSelectScene>(m_controller));
 
 		// 自分が死んでいるのでもし余計な処理が入っているとまずいのでreturn;
 		return;
@@ -70,22 +72,13 @@ void TitleScene::FadeOutUpdate()
 
 void TitleScene::NormalDraw()
 {
-	// 点滅効果付きで「PRESS A BUTTON」「START」を中央表示
+#ifdef _DEBUG
+	// 点滅効果のための条件
 	if ((m_blinkFrame / 30) % 2 == 0)
 	{
-		const char* pressText = "PRESS A BUTTON";
-		const char* startText = "START";
-		int pressWidth = GetDrawStringWidth(pressText, static_cast<int>(strlen(pressText)));
-		int startWidth = GetDrawStringWidth(startText, static_cast<int>(strlen(startText)));
-		int centerX = Game::kScreenWidth / 2;
-		int centerY = 500;
-
-		// 「PRESS A BUTTON」を中央に描画
-		DrawString(centerX - pressWidth / 2, centerY, pressText, 0xffff00);
-
-		// 「START」をその下に描画
-		DrawString(centerX - startWidth / 2, centerY + 50, startText, 0xffff00);
+		DrawString(0, 0, "Title Scene", 0xffffff);
 	}
+#endif
 }
 
 void TitleScene::FadeDraw()

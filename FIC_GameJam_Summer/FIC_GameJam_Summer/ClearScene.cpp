@@ -19,7 +19,6 @@ ClearScene::ClearScene(SceneController& controller) :
 	m_update(&ClearScene::FadeInUpdate),
 	m_draw(&ClearScene::FadeDraw)
 {
-
 }
 
 ClearScene::~ClearScene()
@@ -74,7 +73,7 @@ void ClearScene::NormalDraw()
 	// 点滅効果のための条件
 	if ((m_blinkFrame / 30) % 2 == 0)
 	{
-		DrawString(0, 0, "Clear Scene", 0x000000);
+		DrawString(0, 0, "Clear Scene", 0xffffff);
 	}
 #endif
 }
