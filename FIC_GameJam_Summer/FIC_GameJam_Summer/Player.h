@@ -28,9 +28,9 @@ private:
 	int m_upHandle;
 	int m_downHandle;
 
-	int m_graphWidth;	// 画像の実際の幅(3枚とも同サイズ前提)
-	int m_graphHeight;	// 画像の実際の高さ(3枚とも同サイズ前提)
-	float m_scale;		// 表示拡大率
+	int m_graphWidth;	// 画像の幅
+	int m_graphHeight;	// 画像の高さ
+	float m_scale;		// 拡大率
 
 	MoveState m_moveState;
 
@@ -39,7 +39,7 @@ private:
 
 	bool m_shotTriggered;
 
-	// 移動処理(上下左右フリー)
+	// 移動処理
 	void Move();
 
 	// 現在の移動状態に応じたハンドルを取得する

@@ -7,7 +7,7 @@
 namespace
 {
 	constexpr float kPlayerSpeed = 5.0f;
-	constexpr float kPlayerScale = 2.5f;	// 表示拡大率(お好みで調整してください)
+	constexpr float kPlayerScale = 2.5f; // 拡大率
 }
 
 Player::Player(float startX, float startY) :
@@ -31,7 +31,7 @@ Player::Player(float startX, float startY) :
 	m_downHandle = LoadGraph("Data/PlayerDown.png");
 	assert(m_downHandle > 0);
 
-	// 実際の画像サイズを取得しておく(中心座標計算・クランプ・描画すべての基準にする)
+	// 実際の画像サイズを取得
 	GetGraphSize(m_normalHandle, &m_graphWidth, &m_graphHeight);
 }
 
@@ -57,7 +57,7 @@ void Player::Move()
 		m_x += kPlayerSpeed;
 	}
 
-	// 上下の移動状態を判定(両方押された場合はUP優先)
+	// 上下の移動状態を判定
 	if (Input::GetInstance().IsPress("UP"))
 	{
 		m_y -= kPlayerSpeed;
@@ -73,7 +73,7 @@ void Player::Move()
 		m_moveState = MoveState::Normal;
 	}
 
-	// 実際の表示サイズ(拡大後)を基準に画面外へ出ないようクランプ
+	// 画面外へ出ないようクランプ
 	float halfWidth = (m_graphWidth * m_scale) / 2.0f;
 	float halfHeight = (m_graphHeight * m_scale) / 2.0f;
 
