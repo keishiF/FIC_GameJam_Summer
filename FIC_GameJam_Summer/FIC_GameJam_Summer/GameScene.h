@@ -7,6 +7,7 @@ class Player;
 class Bullet;
 class Enemy;
 class EnemyBullet;
+class HitEffect;
 
 class GameScene final : public SceneBase
 {
@@ -47,11 +48,15 @@ public:
 private:
 	int m_stageNo;
 	int m_stagebgHandle;
+	int m_bgWidth;
 
 	float m_bgScrollX;	// 背景スクロール用オフセット
 
 	std::vector<int> m_playerBulletAnimHandles;
 	std::vector<int> m_enemyBulletAnimHandles;
+
+	std::vector<int> m_hitEffectHandles;
+	std::vector<std::unique_ptr<HitEffect>> m_hitEffects;
 
 	std::unique_ptr<Player> m_player;
 	std::vector<std::unique_ptr<Bullet>> m_bullets;
@@ -99,6 +104,8 @@ private:
 	void UpdateEnemies();
 	// 敵の弾の更新・削除
 	void UpdateEnemyBullets();
+
+	void UpdateHitEffects();
 
 	// 自弾と敵、敵弾とプレイヤーの当たり判定、および死亡した敵の削除
 	void CheckCollisions();

@@ -5,10 +5,10 @@
 namespace
 {
 	// HP
-	constexpr int kPatrolHp = 1;
+	constexpr int kMoverHp = 1;
 
 	constexpr float kMoverScale = 2.0f;
-	constexpr float kMoverCollisionScale = 0.6f;
+	constexpr float kMoverCollisionScale = 0.75f;
 	constexpr float kMoverSpeed = 4.0f;
 
 	int LoadPatrolGraph()
@@ -20,7 +20,7 @@ namespace
 }
 
 EnemyMover::EnemyMover(float x, float startY, float minY, float maxY, int initialDirection) :
-	Enemy(x, startY, LoadPatrolGraph(), kPatrolHp, kMoverScale, kMoverCollisionScale),
+	Enemy(x, startY, LoadPatrolGraph(), kMoverHp, kMoverScale, kMoverCollisionScale),
 	m_minY(minY),
 	m_maxY(maxY),
 	m_direction(initialDirection)

@@ -11,8 +11,8 @@ namespace
 	constexpr int kAnimInterval = 4;
 
 	// 当たり判定用のサイズ
-	constexpr float kCollisionHalfWidth = 30.0f;
-	constexpr float kCollisionHalfHeight = 12.0f;
+	constexpr float kCollisionHalfWidth = 20.0f;
+	constexpr float kCollisionHalfHeight = 10.0f;
 }
 
 EnemyBullet::EnemyBullet(float startX, float startY, const std::vector<int>& animHandles) :

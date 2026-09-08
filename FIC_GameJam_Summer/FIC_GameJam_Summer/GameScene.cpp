@@ -8,6 +8,7 @@
 #include "game.h"
 #include "GameOverScene.h"
 #include "GameScene.h"
+#include "HitEffect.h"
 #include "Input.h"
 #include "Player.h"
 #include "SceneController.h"
@@ -85,6 +86,7 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	SceneBase(controller),
 	m_stageNo(stageNo),
 	m_stagebgHandle(-1),
+	m_bgWidth(0),
 	m_bgScrollX(0.0f),
 	m_remainingBullets(0),
 	m_currentWaveIndex(0),
@@ -97,6 +99,9 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	std::string bgPath = "Data/Stage" + std::to_string(m_stageNo) + "bg.png";
 	m_stagebgHandle = LoadGraph(bgPath.c_str());
 	assert(m_stagebgHandle > 0);
+
+	int dummyHeight = 0;
+	GetGraphSize(m_stagebgHandle, &m_bgWidth, &dummyHeight);
 
 	// プレイヤー弾アニメーションを分割で読み込み
 	{
@@ -124,6 +129,16 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		assert(result == 0);
 
 		m_enemyBulletAnimHandles.assign(handles, handles + kBulletAnimFrameCount);
+	}
+
+	// ヒットエフェクト画像を8枚まとめて読み込み
+	m_hitEffectHandles.reserve(8);
+	for (int i = 1; i <= 8; ++i)
+	{
+		std::string path = "Data/Hit" + std::to_string(i) + ".png";
+		int handle = LoadGraph(path.c_str());
+		assert(handle > 0);
+		m_hitEffectHandles.push_back(handle);
 	}
 
 	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight / 2.0f);
@@ -164,6 +179,7 @@ void GameScene::NormalUpdate()
 	UpdateBullets();
 	UpdateEnemies();
 	UpdateEnemyBullets();
+	UpdateHitEffects();
 
 	CheckCollisions();
 
@@ -232,10 +248,10 @@ void GameScene::UpdateBackgroundScroll()
 {
 	m_bgScrollX -= kBgScrollSpeed;
 
-	// 画面幅分ループさせる(負の値にならないよう調整しつつfmod)
-	if (m_bgScrollX <= -static_cast<float>(Game::kScreenWidth))
+	// 画像の実際の幅を基準にループさせる(画面幅ではなく画像幅を使うのがポイント)
+	if (m_bgScrollX <= -static_cast<float>(m_bgWidth))
 	{
-		m_bgScrollX += static_cast<float>(Game::kScreenWidth);
+		m_bgScrollX += static_cast<float>(m_bgWidth);
 	}
 }
 
@@ -243,9 +259,9 @@ void GameScene::DrawBackground() const
 {
 	int offsetX = static_cast<int>(m_bgScrollX);
 
-	// 2枚並べて描画し、繋ぎ目が見えないようにループさせる
+	// 2枚並べて描画し、繋ぎ目が見えないようにループさせる(画像の実際の幅で並べる)
 	DrawGraph(offsetX, 0, m_stagebgHandle, true);
-	DrawGraph(offsetX + Game::kScreenWidth, 0, m_stagebgHandle, true);
+	DrawGraph(offsetX + m_bgWidth, 0, m_stagebgHandle, true);
 }
 
 void GameScene::BuildWaveData()
@@ -412,6 +428,19 @@ void GameScene::UpdateEnemyBullets()
 		m_enemyBullets.end());
 }
 
+void GameScene::UpdateHitEffects()
+{
+	for (auto& hitEffect : m_hitEffects)
+	{
+		hitEffect->Update();
+	}
+
+	m_hitEffects.erase(
+		std::remove_if(m_hitEffects.begin(), m_hitEffects.end(),
+			[](const std::unique_ptr<HitEffect>& hitEffect) { return !hitEffect->IsActive(); }),
+		m_hitEffects.end());
+}
+
 void GameScene::CheckCollisions()
 {
 	// 自弾 vs 敵
@@ -432,6 +461,10 @@ void GameScene::CheckCollisions()
 			if (bullet->CheckHit(enemy->GetX(), enemy->GetY(), enemy->GetCollisionHalfWidth(), enemy->GetCollisionHalfHeight()))
 			{
 				enemy->TakeDamage(1);
+
+				// ヒットエフェクトを弾の位置に生成
+				m_hitEffects.push_back(std::make_unique<HitEffect>(bullet->GetX(), bullet->GetY(), m_hitEffectHandles));
+
 				bullet->Deactivate();
 				break;	// 1発の弾は1体にしか当たらない
 			}
@@ -508,6 +541,11 @@ void GameScene::NormalDraw()
 	if ((m_blinkFrame / 30) % 2 == 0)
 	{
 		DrawString(0, 0, "Game Scene", 0xffffff);
+	}
+
+	for (const auto& hitEffect : m_hitEffects)
+	{
+		hitEffect->Draw();
 	}
 
 	DrawFormatString(0, 20, 0xffffff, "残弾: %d", m_remainingBullets);

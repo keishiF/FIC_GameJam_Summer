@@ -9,7 +9,7 @@ namespace
 	constexpr int kLooperHp = 1;
 
 	constexpr float kLooperScale = 2.0f;
-	constexpr float kLooperCollisionScale = 0.6f;
+	constexpr float kLooperCollisionScale = 0.75f;
 	// 1フレームあたりの角速度
 	constexpr float kAngularSpeed = 0.03f;
 

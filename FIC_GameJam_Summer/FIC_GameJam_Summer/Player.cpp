@@ -9,7 +9,7 @@ namespace
 	constexpr float kPlayerSpeed = 5.0f;
 	constexpr float kPlayerScale = 2.5f; // 拡大率
 	// 当たり判定の拡大・縮小率
-	constexpr float kPlayerCollisionScale = 0.55f;
+	constexpr float kPlayerCollisionScale = 0.4f;
 
 	// プレイヤーの最大HP
 	constexpr int kMaxHp = 3;

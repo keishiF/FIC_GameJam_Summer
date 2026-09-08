@@ -5,11 +5,11 @@
 namespace
 {
 	// HP
-	constexpr int kTurretHp = 2;
+	constexpr int kShooterHp = 2;
 
-	constexpr float kTurretScale = 2.0f; // 拡大率
+	constexpr float kShooterScale = 2.0f; // 拡大率
 	// 当たり判定の拡大・縮小率
-	constexpr float kTurretCollisionScale = 0.6f;
+	constexpr float kShooterCollisionScale = 0.75f;
 
 	// 何フレームごとに撃つか
 	constexpr int kShotInterval = 90;
@@ -23,7 +23,7 @@ namespace
 }
 
 EnemyShooter::EnemyShooter(float x, float y) :
-	Enemy(x, y, LoadTurretGraph(), kTurretHp, kTurretScale, kTurretCollisionScale),
+	Enemy(x, y, LoadTurretGraph(), kShooterHp, kShooterScale, kShooterCollisionScale),
 	m_shotTimer(0)
 {
 }
