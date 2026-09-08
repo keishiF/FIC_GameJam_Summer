@@ -3,10 +3,6 @@
 #include <memory>
 #include <vector>
 
-class Physics;
-class StageObjectManager;
-class GameObjectManager;
-class UIManager;
 class Player;
 class Bullet;
 class Enemy;
@@ -18,15 +14,21 @@ private:
 	// 敵の種類
 	enum class EnemyType
 	{
-		Turret,
-		// Mover, // 今後実装予定
+		Shooter,
+		Mover,
+		Looper,
 	};
 
 	// 1体分の出現情報
 	struct EnemySpawnInfo
 	{
 		EnemyType type;
-		float y;	// 出現Y座標(X座標は固定)
+		float x;			// 出現X座標
+		float y;			// 出現Y座標
+		float radiusX;		// Looper専用: 横方向の半径
+		float radiusY;		// Looper専用: 縦方向の半径
+		int direction;		// Mover: 初期移動方向(+1:下 -1:上) / Looper: 回転方向(+1:時計回り -1:反時計回り)
+		float startAngle;	// Looper専用: 開始角度(ラジアン)
 	};
 
 	// 1ウェーブ分の出現情報
@@ -44,9 +46,12 @@ public:
 
 private:
 	int m_stageNo;
-	int m_stage1bgHandle;
+	int m_stagebgHandle;
 
-	std::vector<int> m_bulletAnimHandles;
+	float m_bgScrollX;	// 背景スクロール用オフセット
+
+	std::vector<int> m_playerBulletAnimHandles;
+	std::vector<int> m_enemyBulletAnimHandles;
 
 	std::unique_ptr<Player> m_player;
 	std::vector<std::unique_ptr<Bullet>> m_bullets;
@@ -55,10 +60,10 @@ private:
 
 	int m_remainingBullets;	// このステージで残っている弾数
 
-	std::vector<WaveData> m_waves;	// このステージの全ウェーブ情報
-	int m_currentWaveIndex;		// 現在のウェーブ番号
+	std::vector<WaveData> m_waves; // このステージの全ウェーブ情報
+	int m_currentWaveIndex;	// 現在のウェーブ番号
 
-	bool m_isGameOver;				// フェードアウト後の遷移先を分けるためのフラグ
+	bool m_isGameOver; // フェードアウト後の遷移先を分けるためのフラグ
 
 	float m_fadeFrame;
 	int m_blinkFrame;
@@ -98,6 +103,11 @@ private:
 	// 自弾と敵、敵弾とプレイヤーの当たり判定、および死亡した敵の削除
 	void CheckCollisions();
 
-	// ウェーブ進行(現在のウェーブの敵が全滅したら次のウェーブへ、全滅済みならステージクリアへ)
+	// ウェーブ進行
 	void UpdateWaveProgress();
+
+	// 背景スクロールのオフセット更新
+	void UpdateBackgroundScroll();
+	// 背景を2枚並べてループ描画する
+	void DrawBackground() const;
 };

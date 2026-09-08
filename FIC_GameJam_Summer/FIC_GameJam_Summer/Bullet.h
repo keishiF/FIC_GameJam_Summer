@@ -4,7 +4,6 @@
 class Bullet
 {
 public:
-	// animHandles: あらかじめ分割ロード済みの弾アニメーション画像ハンドル配列(所有権はGameScene側)
 	Bullet(float startX, float startY, const std::vector<int>& animHandles);
 	~Bullet();
 
@@ -13,7 +12,14 @@ public:
 
 	bool IsActive() const { return m_isActive; }
 
-	// 対象との当たり判定(AABB)
+	float GetX() const { return m_x; }
+	float GetY() const { return m_y; }
+
+	// 当たり判定用の半分のサイズ
+	float GetCollisionHalfWidth() const;
+	float GetCollisionHalfHeight() const;
+
+	// 対象との当たり判定
 	bool CheckHit(float targetX, float targetY, float targetHalfWidth, float targetHalfHeight) const;
 
 	void Deactivate() { m_isActive = false; }

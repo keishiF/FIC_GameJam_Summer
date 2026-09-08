@@ -16,7 +16,8 @@ namespace
 	constexpr int kCursorColor = 0xff0000;
 
 	constexpr int kPlayerSize = 40;
-	constexpr float kMoveLerpRate = 0.3f; // 目標位置への近づき具合(0~1、大きいほど速い)
+	// 目標位置への近づき具合(0~1、大きいほど速い)
+	constexpr float kMoveLerpRate = 0.3f; 
 }
 
 StageSelectScene::StageSelectScene(SceneController& controller) :
@@ -117,7 +118,7 @@ void StageSelectScene::UpdatePlayerPosition()
 {
 	float targetX = GetStageCenterX(m_selectStage);
 
-	// 目標位置へ少しずつ近づける(線形補間)
+	// 目標位置へ少しずつ近づける
 	m_playerX += (targetX - m_playerX) * kMoveLerpRate;
 
 	// ほぼ到達したらぴったり合わせる(誤差の蓄積防止)

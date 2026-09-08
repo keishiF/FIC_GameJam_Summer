@@ -12,11 +12,11 @@ public:
 
 private:
 	int m_playerHandle;
-	float m_playerX;	// 見た目の現在位置(補間で少しずつ動く)
+	float m_playerX;	// 見た目の現在位置
 	float m_playerY;
 
-	int m_selectStage;	// 選択中のステージ番号(0始まり)
-	bool m_facingRight;	// プレイヤーの向き(true:右向き, false:左向き)
+	int m_selectStage;	// 選択中のステージ番号
+	bool m_facingRight;	// プレイヤーの向き
 
 	float m_fadeFrame;
 	int m_blinkFrame;

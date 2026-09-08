@@ -7,10 +7,14 @@
 namespace
 {
 	constexpr float kPlayerSpeed = 5.0f;
-	constexpr float kPlayerScale = 2.5f;	// 表示拡大率(お好みで調整してください)
+	constexpr float kPlayerScale = 2.5f; // 拡大率
+	// 当たり判定の拡大・縮小率
+	constexpr float kPlayerCollisionScale = 0.55f;
 
-	constexpr int kMaxHp = 3;				// プレイヤーの最大HP(ここを書き換えれば調整可能)
-	constexpr int kInvulnerableFrame = 90;	// 被弾後、次に被弾するまでの無敵時間(フレーム数)
+	// プレイヤーの最大HP
+	constexpr int kMaxHp = 3;
+	// 被弾クールタイム
+	constexpr int kInvulnerableFrame = 90;
 }
 
 Player::Player(float startX, float startY) :
@@ -20,6 +24,7 @@ Player::Player(float startX, float startY) :
 	m_graphWidth(0),
 	m_graphHeight(0),
 	m_scale(kPlayerScale),
+	m_collisionScale(kPlayerCollisionScale),
 	m_moveState(MoveState::Normal),
 	m_x(startX),
 	m_y(startY),
@@ -36,12 +41,13 @@ Player::Player(float startX, float startY) :
 	m_downHandle = LoadGraph("Data/PlayerDown.png");
 	assert(m_downHandle > 0);
 
-	// 実際の画像サイズを取得しておく(中心座標計算・クランプ・描画すべての基準にする)
+	// 画像サイズを取得
 	GetGraphSize(m_normalHandle, &m_graphWidth, &m_graphHeight);
 }
 
 Player::~Player()
-{}
+{
+}
 
 void Player::Update()
 {
@@ -66,7 +72,7 @@ void Player::Move()
 		m_x += kPlayerSpeed;
 	}
 
-	// 上下の移動状態を判定(両方押された場合はUP優先)
+	// 上下の移動状態を判定
 	if (Input::GetInstance().IsPress("UP"))
 	{
 		m_y -= kPlayerSpeed;
@@ -82,7 +88,7 @@ void Player::Move()
 		m_moveState = MoveState::Normal;
 	}
 
-	// 実際の表示サイズ(拡大後)を基準に画面外へ出ないようクランプ
+	// 画面外へ出ないようクランプ
 	float halfWidth = GetHalfWidth();
 	float halfHeight = GetHalfHeight();
 
@@ -100,6 +106,16 @@ float Player::GetHalfWidth() const
 float Player::GetHalfHeight() const
 {
 	return (m_graphHeight * m_scale) / 2.0f;
+}
+
+float Player::GetCollisionHalfWidth() const
+{
+	return GetHalfWidth() * m_collisionScale;
+}
+
+float Player::GetCollisionHalfHeight() const
+{
+	return GetHalfHeight() * m_collisionScale;
 }
 
 void Player::TakeDamage(int damage)
@@ -134,7 +150,7 @@ int Player::GetCurrentHandle() const
 
 void Player::Draw() const
 {
-	// 無敵時間中は点滅させる(不要であればこのif文ごと削除してください)
+	// 無敵時間中は点滅させる
 	if (m_invulnerableTimer > 0 && (m_invulnerableTimer / 4) % 2 == 0)
 	{
 		return;

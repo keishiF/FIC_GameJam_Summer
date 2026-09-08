@@ -12,8 +12,13 @@ public:
 	float GetX() const { return m_x; }
 	float GetY() const { return m_y; }
 
+	// 見た目上の半分のサイズ
 	float GetHalfWidth() const;
 	float GetHalfHeight() const;
+
+	// 当たり判定用の半分のサイズ
+	float GetCollisionHalfWidth() const;
+	float GetCollisionHalfHeight() const;
 
 	// このフレームで攻撃ボタンが押されたか
 	bool IsShotTriggered() const { return m_shotTriggered; }
@@ -40,6 +45,7 @@ private:
 	int m_graphWidth;
 	int m_graphHeight;
 	float m_scale;
+	float m_collisionScale;	// 当たり判定を見た目に対してどれだけ縮小するか
 
 	MoveState m_moveState;
 
@@ -51,7 +57,7 @@ private:
 	int m_hp;
 	int m_invulnerableTimer;
 
-	// 移動処理(上下左右フリー)
+	// 移動処理
 	void Move();
 
 	// 現在の移動状態に応じたハンドルを取得する

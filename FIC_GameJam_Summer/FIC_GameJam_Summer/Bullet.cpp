@@ -8,9 +8,10 @@ namespace
 	constexpr float kBulletSpeed = 12.0f;
 	constexpr int kBulletWidth = 256;
 	constexpr int kBulletHeight = 64;
-	constexpr int kAnimInterval = 4;	// 何フレームごとにアニメーションのコマを切り替えるか
+	// 何フレームごとにアニメーションのコマを切り替えるか
+	constexpr int kAnimInterval = 4;
 
-	// 当たり判定用のサイズ(見た目より小さめにして判定を厳しくしすぎない)
+	// 当たり判定用のサイズ
 	constexpr float kCollisionHalfWidth = 40.0f;
 	constexpr float kCollisionHalfHeight = 16.0f;
 }
@@ -22,10 +23,12 @@ Bullet::Bullet(float startX, float startY, const std::vector<int>& animHandles) 
 	m_x(startX),
 	m_y(startY),
 	m_isActive(true)
-{}
+{
+}
 
 Bullet::~Bullet()
-{}
+{
+}
 
 void Bullet::Update()
 {
@@ -63,6 +66,16 @@ void Bullet::Draw() const
 		static_cast<int>(m_y - kBulletHeight / 2.0f),
 		m_animHandles[m_animFrame],
 		true);
+}
+
+float Bullet::GetCollisionHalfWidth() const
+{
+	return kCollisionHalfWidth;
+}
+
+float Bullet::GetCollisionHalfHeight() const
+{
+	return kCollisionHalfHeight;
 }
 
 bool Bullet::CheckHit(float targetX, float targetY, float targetHalfWidth, float targetHalfHeight) const
