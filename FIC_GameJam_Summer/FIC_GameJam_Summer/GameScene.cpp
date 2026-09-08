@@ -25,31 +25,30 @@ namespace
 
 	constexpr float kPi = 3.14159265358979323846f;
 
-	// プレイヤーの弾アニメーション(PlayerBullet.png)
+	// プレイヤーの弾アニメーション
 	constexpr int kPlayerBulletFrameWidth = 256;
 	constexpr int kPlayerBulletFrameHeight = 64;
 
-	// 敵の弾アニメーション(EnemyBullet.png)
+	// 敵の弾アニメーション
 	constexpr int kEnemyBulletFrameWidth = 128;
 	constexpr int kEnemyBulletFrameHeight = 64;
 
-	// どちらの弾も縦7分割のシートで、最後の1コマが空白という共通の構成
-	constexpr int kBulletSheetFrameCount = 7;	// シート内の総コマ数(最後の1コマは空白)
-	constexpr int kBulletAnimFrameCount = 6;	// アニメーションに使うコマ数(空白コマは除く)
+	constexpr int kBulletAnimFrameNum = 7;	// アニメーションのコマの総数
+	constexpr int kBulletAnimFrameCount = 6;	// 1コマに使うフレーム数
 
-	// ステージごとの弾数上限(インデックス0 = ステージ1、1 = ステージ2 ...)
+	// ステージごとの弾数上限
 	constexpr int kStageBulletLimits[] = { 21, 22, 23, 24 };
 
-	// ウェーブ間の待機時間(フレーム数。60fps換算で90=1.5秒、ここを書き換えれば調整できる)
+	// ウェーブ間の待機時間
 	constexpr int kWaveDelayFrame = 90;
 
-	// 背景スクロール速度(ここを書き換えれば速さを調整できる、右から左へ流れる向き)
+	// 背景スクロール速度
 	constexpr float kBgScrollSpeed = 2.0f;
 
-	// 敵の出現X座標(画面右側で固定、右グリッド)
+	// 敵の出現X座標
 	constexpr float kEnemySpawnX = 1000.0f;
 
-	// 画面を縦4分割した際の各行の中心Y座標(表示はしない、配置計算のみに使用)
+	// 画面を縦4分割した際の各行の中心Y座標
 	constexpr int kGridRows = 4;
 	constexpr float kGridRowHeight = static_cast<float>(Game::kScreenHeight) / kGridRows;
 	constexpr float kRowY[kGridRows] = {
@@ -59,16 +58,24 @@ namespace
 		kGridRowHeight * 3.5f,	// 1番下
 	};
 
-	// ステージ2用: グリッドを左に1マス分追加(正方形マスを想定)
+	// ステージ2用: グリッドを左に1マス分追加
 	constexpr float kGridColumnWidth = kGridRowHeight;
 	constexpr float kRightColumnX = kEnemySpawnX;
 	constexpr float kLeftColumnX = kEnemySpawnX - kGridColumnWidth;
 
-	// ステージ2 ウェーブ2/3: ループ移動の軌道パラメータ(左右グリッドの間、上下グリッド範囲全体を使用)
-	constexpr float kLoopCenterX = (kLeftColumnX + kRightColumnX) * 0.5f;
-	constexpr float kLoopCenterY = (kRowY[0] + kRowY[3]) * 0.5f;
-	constexpr float kLoopRadiusX = (kRightColumnX - kLeftColumnX) * 0.5f;
-	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) * 0.5f;
+	// ステージ2 ウェーブ2/3: ループ移動の軌道パラメータ
+	constexpr float kLoopCenterX = (kLeftColumnX + kRightColumnX) / 2.0f;
+	constexpr float kLoopCenterY = (kRowY[0] + kRowY[3]) / 2.0f;
+	constexpr float kLoopRadiusX = (kRightColumnX - kLeftColumnX) / 2.0f;
+	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) / 2.0f;
+
+	// ステージ2 ウェーブ1: 画面上半分・下半分でそれぞれ円を描く敵の軌道パラメータ
+	// 半径
+	constexpr float kWave1LoopRadius = 150.0f;
+	// 画面上半分の中心Y
+	constexpr float kWave1UpperCenterY = kGridRowHeight;
+	// 画面下半分の中心Y
+	constexpr float kWave1LowerCenterY = Game::kScreenHeight - kGridRowHeight;
 
 #ifdef _DEBUG
 	// 当たり判定デバッグ表示用の矩形描画
@@ -106,17 +113,17 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	m_stagebgHandle = LoadGraph(bgPath.c_str());
 	assert(m_stagebgHandle > 0);
 
-	// 背景の実際の幅を取得(継ぎ目なくループさせるための基準)
+	// 背景の幅を取得
 	int dummyHeight = 0;
 	GetGraphSize(m_stagebgHandle, &m_bgWidth, &dummyHeight);
 
-	// プレイヤー弾アニメーションを7コマ分割で読み込み
+	// プレイヤー弾アニメーションを読み込み
 	{
-		int handles[kBulletSheetFrameCount];
+		int handles[kBulletAnimFrameNum];
 		int result = LoadDivGraph(
 			"Data/PlayerBullet.png",
-			kBulletSheetFrameCount,
-			1, kBulletSheetFrameCount,
+			kBulletAnimFrameNum,
+			1, kBulletAnimFrameNum,
 			kPlayerBulletFrameWidth, kPlayerBulletFrameHeight,
 			handles);
 		assert(result == 0);
@@ -124,13 +131,13 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		m_playerBulletAnimHandles.assign(handles, handles + kBulletAnimFrameCount);
 	}
 
-	// 敵弾アニメーションを7コマ分割で読み込み
+	// 敵弾アニメーションを読み込み
 	{
-		int handles[kBulletSheetFrameCount];
+		int handles[kBulletAnimFrameNum];
 		int result = LoadDivGraph(
 			"Data/EnemyBullet.png",
-			kBulletSheetFrameCount,
-			1, kBulletSheetFrameCount,
+			kBulletAnimFrameNum,
+			1, kBulletAnimFrameNum,
 			kEnemyBulletFrameWidth, kEnemyBulletFrameHeight,
 			handles);
 		assert(result == 0);
@@ -148,9 +155,9 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		m_hitEffectHandles.push_back(handle);
 	}
 
-	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight * 0.5f);
+	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight / 2.0f);
 
-	// ステージ番号(1始まり)に対応する弾数上限を適用
+	// ステージ番号に対応する弾数上限を適用
 	int stageIndex = m_stageNo - 1;
 	assert(stageIndex >= 0 && stageIndex < static_cast<int>(std::size(kStageBulletLimits)));
 	m_totalBullets = kStageBulletLimits[stageIndex];
@@ -208,7 +215,7 @@ void GameScene::NormalUpdate()
 		return;
 	}
 
-	// 弾切れ(画面上の弾も含めて全て無くなった)かつ、まだ全ウェーブクリアしていない場合はゲームオーバー
+	// 弾切れかつ、まだ全ウェーブクリアしていない場合はゲームオーバー
 	if (m_remainingBullets <= 0 && m_bullets.empty())
 	{
 		m_isGameOver = true;
@@ -250,7 +257,7 @@ void GameScene::UpdateBackgroundScroll()
 {
 	m_bgScrollX -= kBgScrollSpeed;
 
-	// 画像の実際の幅を基準にループさせる(画面幅ではなく画像幅を使うのがポイント)
+	// 画像の実際の幅を基準にループさせる
 	if (m_bgScrollX <= -static_cast<float>(m_bgWidth))
 	{
 		m_bgScrollX += static_cast<float>(m_bgWidth);
@@ -259,10 +266,9 @@ void GameScene::UpdateBackgroundScroll()
 
 void GameScene::DrawBackground() const
 {
-	// static_castではなくstd::floorを使う(負の値でも一貫して切り捨てるため、1px単位の隙間を防ぐ)
 	int offsetX = static_cast<int>(std::floor(m_bgScrollX));
 
-	// 2枚並べて描画し、繋ぎ目が見えないようにループさせる(画像の実際の幅で並べる)
+	// 2枚並べて描画し、繋ぎ目が見えないようにループさせる
 	DrawGraph(offsetX, 0, m_stagebgHandle, true);
 	DrawGraph(offsetX + m_bgWidth, 0, m_stagebgHandle, true);
 }
@@ -300,23 +306,23 @@ void GameScene::BuildWaveData()
 	{
 		WaveData wave1;
 		wave1.enemies = {
-			// 左グリッド: 上から下へ移動開始
-			{ EnemyType::Mover, kLeftColumnX, kRowY[0], 0.0f, 0.0f, 1, 0.0f },
-			// 右グリッド: 下から上へ移動開始
-			{ EnemyType::Mover, kRightColumnX, kRowY[3], 0.0f, 0.0f, -1, 0.0f },
+			// 画面上半分で円を描くように周回
+			{ EnemyType::Looper, kLoopCenterX, kWave1UpperCenterY, kWave1LoopRadius, kWave1LoopRadius, 1, 0.0f },
+			// 画面下半分で円を描くように周回(逆回転)
+			{ EnemyType::Looper, kLoopCenterX, kWave1LowerCenterY, kWave1LoopRadius, kWave1LoopRadius, -1, 0.0f },
 		};
 
 		WaveData wave2;
 		wave2.enemies = {
-			// 上から出て時計回りにループ(角度0 = 一番上)
+			// 上から出て時計回りにループ
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
-			// 下から出て、上の個体と常に反対側を保ちながら同じ方向にループ(角度π = 一番下)
+			// 下から出て、上の個体と常に反対側を保ちながら同じ方向にループ
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, kPi },
 		};
 
 		WaveData wave3;
 		wave3.enemies = {
-			// ウェーブ2と逆回転(反時計回り)
+			// ウェーブ2と逆回転
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, 0.0f },
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, kPi },
 		};
@@ -326,8 +332,8 @@ void GameScene::BuildWaveData()
 	}
 	default:
 	{
-		// TODO: ステージ3・4のウェーブデータも決まり次第ここに追加する
-		// 仮でステージ1と同じ内容にしておく(0件のままだと即クリア扱いになってしまうため)
+		// ステージ3・4のウェーブデータも決まり次第ここに追加する
+		// 仮でステージ1と同じ内容にしておく
 		WaveData tempWave;
 		tempWave.enemies = {
 			{ EnemyType::Shooter, kEnemySpawnX, kRowY[1] },
@@ -353,7 +359,8 @@ void GameScene::SpawnWave(int waveIndex)
 		switch (spawnInfo.type)
 		{
 		case EnemyType::Shooter:
-			m_enemies.push_back(std::make_unique<EnemyShooter>(spawnInfo.x, spawnInfo.y));
+			m_enemies.push_back(std::make_unique<EnemyShooter>(
+				spawnInfo.x, spawnInfo.y, kRowY[0], kRowY[3], *m_player));
 			break;
 
 		case EnemyType::Mover:
@@ -393,7 +400,7 @@ void GameScene::UpdateBullets()
 		bullet->Update();
 	}
 
-	// 非アクティブな弾をまとめて削除(erase-removeイディオム)
+	// 非アクティブな弾をまとめて削除
 	m_bullets.erase(
 		std::remove_if(m_bullets.begin(), m_bullets.end(),
 			[](const std::unique_ptr<Bullet>& bullet) { return !bullet->IsActive(); }),

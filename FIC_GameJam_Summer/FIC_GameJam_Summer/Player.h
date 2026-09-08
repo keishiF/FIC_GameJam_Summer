@@ -45,7 +45,8 @@ private:
 	int m_graphWidth;
 	int m_graphHeight;
 	float m_scale;
-	float m_collisionScale;	// 当たり判定を見た目に対してどれだけ縮小するか
+	// 当たり判定を見た目に対してどれだけ縮小するか
+	float m_collisionScale;
 
 	MoveState m_moveState;
 

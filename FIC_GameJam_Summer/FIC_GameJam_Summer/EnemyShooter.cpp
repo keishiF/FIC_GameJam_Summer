@@ -1,16 +1,23 @@
 ﻿#include "EnemyShooter.h"
+#include "Player.h"
 #include <cassert>
+#include <cmath>
 #include <DxLib.h>
 
 namespace
 {
-	// 据え置き型のHP(ここを書き換えるだけで硬さを調整できる)
+	// プレイヤー追従型のHP
 	constexpr int kShooterHp = 2;
 
 	constexpr float kShooterScale = 2.0f;
-	constexpr float kShooterCollisionScale = 0.6f;	// 当たり判定を見た目の60%に縮小(調整可能)
+	// 当たり判定の拡大率
+	constexpr float kShooterCollisionScale = 0.6f;
 
-	constexpr int kShotInterval = 90;	// 何フレームごとに撃つか(ここを書き換えれば攻撃頻度を調整できる)
+	// プレイヤーのY座標へ近づく速度
+	constexpr float kTrackSpeed = 3.0f;
+
+	// 何フレームごとに撃つか
+	constexpr int kShotInterval = 60;
 
 	int LoadShooterGraph()
 	{
@@ -20,8 +27,11 @@ namespace
 	}
 }
 
-EnemyShooter::EnemyShooter(float x, float y) :
+EnemyShooter::EnemyShooter(float x, float y, float minY, float maxY, const Player& player) :
 	Enemy(x, y, LoadShooterGraph(), kShooterHp, kShooterScale, kShooterCollisionScale),
+	m_minY(minY),
+	m_maxY(maxY),
+	m_player(player),
 	m_shotTimer(0)
 {}
 
@@ -30,6 +40,23 @@ EnemyShooter::~EnemyShooter()
 
 void EnemyShooter::UpdateBehavior()
 {
+	// プレイヤーのY座標に軸を合わせるように上下移動
+	float targetY = m_player.GetY();
+	float diff = targetY - m_y;
+
+	if (std::abs(diff) <= kTrackSpeed)
+	{
+		m_y = targetY;
+	}
+	else
+	{
+		m_y += (diff > 0.0f) ? kTrackSpeed : -kTrackSpeed;
+	}
+
+	// 移動可能範囲内にクランプ
+	if (m_y < m_minY) m_y = m_minY;
+	if (m_y > m_maxY) m_y = m_maxY;
+
 	m_shotTriggered = false;
 
 	++m_shotTimer;

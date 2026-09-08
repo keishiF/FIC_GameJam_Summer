@@ -8,7 +8,6 @@ class Bullet;
 class Enemy;
 class EnemyBullet;
 class HitEffect;
-
 class GameScene final : public SceneBase
 {
 private:
@@ -26,10 +25,10 @@ private:
 		EnemyType type;
 		float x;			// 出現X座標、Looperでは中心X座標
 		float y;			// 出現Y座標、Looperでは中心Y座標
-		float radiusX;		// Looper専用: 横方向の半径(他タイプでは未使用)
-		float radiusY;		// Looper専用: 縦方向の半径(他タイプでは未使用)
-		int direction;		// Mover: 初期移動方向(+1:下 -1:上) / Looper: 回転方向(+1:時計回り -1:反時計回り)
-		float startAngle;	// Looper専用: 開始角度(ラジアン、他タイプでは未使用)
+		float radiusX;		// 横方向の半径
+		float radiusY;		// 縦方向の半径
+		int direction;		// Mover: 初期移動方向 / Looper: 回転方向
+		float startAngle;	// 開始角度(ラジアン)
 	};
 
 	// 1ウェーブ分の出現情報
@@ -48,7 +47,7 @@ public:
 private:
 	int m_stageNo;
 	int m_stagebgHandle;
-	int m_bgWidth;	// 背景画像の実際の横幅(継ぎ目なくループさせる基準)
+	int m_bgWidth;	// 背景画像の横幅
 
 	float m_bgScrollX;	// 背景スクロール用オフセット
 
@@ -62,7 +61,7 @@ private:
 	std::vector<std::unique_ptr<EnemyBullet>> m_enemyBullets;
 	std::vector<std::unique_ptr<HitEffect>> m_hitEffects;
 
-	int m_totalBullets;		// このステージの弾数上限(初期値、リザルト用に保持)
+	int m_totalBullets;		// このステージの弾数上限
 	int m_remainingBullets;	// このステージで残っている弾数
 
 	std::vector<WaveData> m_waves;	// このステージの全ウェーブ情報
@@ -113,7 +112,7 @@ private:
 	// 自弾と敵、敵弾とプレイヤーの当たり判定、および死亡した敵の削除
 	void CheckCollisions();
 
-	// ウェーブ進行(現在のウェーブの敵が全滅したら一定時間待って次のウェーブへ、全滅済みならステージクリアへ)
+	// ウェーブ進行
 	void UpdateWaveProgress();
 
 	// 背景スクロールのオフセット更新
