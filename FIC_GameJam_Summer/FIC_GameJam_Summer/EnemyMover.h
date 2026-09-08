@@ -5,12 +5,13 @@
 class EnemyMover final : public Enemy
 {
 public:
+	// x: 固定X座標, startY: 開始Y座標, minY/maxY: 往復範囲, initialDirection: 初期移動方向(+1:下 -1:上)
 	EnemyMover(float x, float startY, float minY, float maxY, int initialDirection);
 	~EnemyMover();
 
-	virtual void Update() override;
-
 private:
+	virtual void UpdateBehavior() override;
+
 	float m_minY;
 	float m_maxY;
 	int m_direction;

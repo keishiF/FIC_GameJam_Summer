@@ -4,17 +4,15 @@
 
 namespace
 {
-	// HP
+	// 据え置き型のHP(ここを書き換えるだけで硬さを調整できる)
 	constexpr int kShooterHp = 2;
 
-	constexpr float kShooterScale = 2.0f; // 拡大率
-	// 当たり判定の拡大・縮小率
-	constexpr float kShooterCollisionScale = 0.75f;
+	constexpr float kShooterScale = 2.0f;
+	constexpr float kShooterCollisionScale = 0.6f;	// 当たり判定を見た目の60%に縮小(調整可能)
 
-	// 何フレームごとに撃つか
-	constexpr int kShotInterval = 90;
+	constexpr int kShotInterval = 90;	// 何フレームごとに撃つか(ここを書き換えれば攻撃頻度を調整できる)
 
-	int LoadTurretGraph()
+	int LoadShooterGraph()
 	{
 		int handle = LoadGraph("Data/EnemyShooter.png");
 		assert(handle > 0);
@@ -23,16 +21,14 @@ namespace
 }
 
 EnemyShooter::EnemyShooter(float x, float y) :
-	Enemy(x, y, LoadTurretGraph(), kShooterHp, kShooterScale, kShooterCollisionScale),
+	Enemy(x, y, LoadShooterGraph(), kShooterHp, kShooterScale, kShooterCollisionScale),
 	m_shotTimer(0)
-{
-}
+{}
 
 EnemyShooter::~EnemyShooter()
-{
-}
+{}
 
-void EnemyShooter::Update()
+void EnemyShooter::UpdateBehavior()
 {
 	m_shotTriggered = false;
 

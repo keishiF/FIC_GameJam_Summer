@@ -7,8 +7,8 @@ public:
 	EnemyShooter(float x, float y);
 	~EnemyShooter();
 
-	virtual void Update() override;
-
 private:
+	virtual void UpdateBehavior() override;
+
 	int m_shotTimer;
 };

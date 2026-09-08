@@ -4,14 +4,14 @@
 
 namespace
 {
-	// HP
+	// 移動型のHP(ここを書き換えるだけで硬さを調整できる)
 	constexpr int kMoverHp = 1;
 
 	constexpr float kMoverScale = 2.0f;
-	constexpr float kMoverCollisionScale = 0.75f;
-	constexpr float kMoverSpeed = 4.0f;
+	constexpr float kMoverCollisionScale = 0.6f;
+	constexpr float kMoverSpeed = 4.0f;	// 移動速度(ここを書き換えれば速さを調整できる)
 
-	int LoadPatrolGraph()
+	int LoadMoverGraph()
 	{
 		int handle = LoadGraph("Data/EnemyMover.png");
 		assert(handle > 0);
@@ -20,18 +20,16 @@ namespace
 }
 
 EnemyMover::EnemyMover(float x, float startY, float minY, float maxY, int initialDirection) :
-	Enemy(x, startY, LoadPatrolGraph(), kMoverHp, kMoverScale, kMoverCollisionScale),
+	Enemy(x, startY, LoadMoverGraph(), kMoverHp, kMoverScale, kMoverCollisionScale),
 	m_minY(minY),
 	m_maxY(maxY),
 	m_direction(initialDirection)
-{
-}
+{}
 
 EnemyMover::~EnemyMover()
-{
-}
+{}
 
-void EnemyMover::Update()
+void EnemyMover::UpdateBehavior()
 {
 	m_y += kMoverSpeed * m_direction;
 

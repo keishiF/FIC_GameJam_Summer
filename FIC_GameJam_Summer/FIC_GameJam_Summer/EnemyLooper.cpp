@@ -5,13 +5,12 @@
 
 namespace
 {
-	// HP
+	// 移動型のHP(ここを書き換えるだけで硬さを調整できる)
 	constexpr int kLooperHp = 1;
 
 	constexpr float kLooperScale = 2.0f;
-	constexpr float kLooperCollisionScale = 0.75f;
-	// 1フレームあたりの角速度
-	constexpr float kAngularSpeed = 0.03f;
+	constexpr float kLooperCollisionScale = 0.6f;
+	constexpr float kAngularSpeed = 0.03f;	// 1フレームあたりの角速度(ラジアン、大きいほど速く回る)
 
 	int LoadLooperGraph()
 	{
@@ -44,14 +43,12 @@ EnemyLooper::EnemyLooper(float centerX, float centerY, float radiusX, float radi
 	m_radiusY(radiusY),
 	m_direction(direction),
 	m_angle(startAngle)
-{
-}
+{}
 
 EnemyLooper::~EnemyLooper()
-{
-}
+{}
 
-void EnemyLooper::Update()
+void EnemyLooper::UpdateBehavior()
 {
 	m_angle += kAngularSpeed * m_direction;
 

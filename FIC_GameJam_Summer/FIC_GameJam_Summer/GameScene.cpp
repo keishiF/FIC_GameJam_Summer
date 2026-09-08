@@ -15,6 +15,8 @@
 #include "TitleScene.h"
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <iterator>
 #include <string>
 #include <DxLib.h>
 
@@ -24,29 +26,31 @@ namespace
 
 	constexpr float kPi = 3.14159265358979323846f;
 
-	// プレイヤーの弾アニメーション
+	// プレイヤーの弾アニメーション(PlayerBullet.png)
 	constexpr int kPlayerBulletFrameWidth = 256;
 	constexpr int kPlayerBulletFrameHeight = 64;
 
-	// 敵の弾アニメーション
+	// 敵の弾アニメーション(EnemyBullet.png)
 	constexpr int kEnemyBulletFrameWidth = 128;
 	constexpr int kEnemyBulletFrameHeight = 64;
 
-	// 弾グラフィックのアニメーションの総数
-	constexpr int kBulletAnimFrameNum = 7;
-	// 1コマに使うフレーム数
-	constexpr int kBulletAnimFrameCount = 6;
+	// どちらの弾も縦7分割のシートで、最後の1コマが空白という共通の構成
+	constexpr int kBulletSheetFrameCount = 7;	// シート内の総コマ数(最後の1コマは空白)
+	constexpr int kBulletAnimFrameCount = 6;	// アニメーションに使うコマ数(空白コマは除く)
 
-	// ステージごとの弾数上限
+	// ステージごとの弾数上限(インデックス0 = ステージ1、1 = ステージ2 ...)
 	constexpr int kStageBulletLimits[] = { 21, 22, 23, 24 };
 
-	// 背景スクロール速度
+	// ウェーブ間の待機時間(フレーム数。60fps換算で90=1.5秒、ここを書き換えれば調整できる)
+	constexpr int kWaveDelayFrame = 90;
+
+	// 背景スクロール速度(ここを書き換えれば速さを調整できる、右から左へ流れる向き)
 	constexpr float kBgScrollSpeed = 2.0f;
 
-	// 敵の出現X座標
+	// 敵の出現X座標(画面右側で固定、右グリッド)
 	constexpr float kEnemySpawnX = 1000.0f;
 
-	// 画面を縦4分割した際の各行の中心Y座標
+	// 画面を縦4分割した際の各行の中心Y座標(表示はしない、配置計算のみに使用)
 	constexpr int kGridRows = 4;
 	constexpr float kGridRowHeight = static_cast<float>(Game::kScreenHeight) / kGridRows;
 	constexpr float kRowY[kGridRows] = {
@@ -56,12 +60,12 @@ namespace
 		kGridRowHeight * 3.5f,	// 1番下
 	};
 
-	// ステージ2用グリッド、左に1マス分追加
+	// ステージ2用: グリッドを左に1マス分追加(正方形マスを想定)
 	constexpr float kGridColumnWidth = kGridRowHeight;
 	constexpr float kRightColumnX = kEnemySpawnX;
 	constexpr float kLeftColumnX = kEnemySpawnX - kGridColumnWidth;
 
-	// ステージ2 ウェーブ2/3: ループ移動の軌道パラメータ
+	// ステージ2 ウェーブ2/3: ループ移動の軌道パラメータ(左右グリッドの間、上下グリッド範囲全体を使用)
 	constexpr float kLoopCenterX = (kLeftColumnX + kRightColumnX) / 2.0f;
 	constexpr float kLoopCenterY = (kRowY[0] + kRowY[3]) / 2.0f;
 	constexpr float kLoopRadiusX = (kRightColumnX - kLeftColumnX) / 2.0f;
@@ -88,8 +92,11 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	m_stagebgHandle(-1),
 	m_bgWidth(0),
 	m_bgScrollX(0.0f),
+	m_totalBullets(0),
 	m_remainingBullets(0),
 	m_currentWaveIndex(0),
+	m_isWaitingNextWave(false),
+	m_waveDelayTimer(0),
 	m_isGameOver(false),
 	m_fadeFrame(kFadeInterval),
 	m_blinkFrame(0),
@@ -100,16 +107,17 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	m_stagebgHandle = LoadGraph(bgPath.c_str());
 	assert(m_stagebgHandle > 0);
 
+	// 背景の実際の幅を取得(継ぎ目なくループさせるための基準)
 	int dummyHeight = 0;
 	GetGraphSize(m_stagebgHandle, &m_bgWidth, &dummyHeight);
 
-	// プレイヤー弾アニメーションを分割で読み込み
+	// プレイヤー弾アニメーションを7コマ分割で読み込み
 	{
-		int handles[kBulletAnimFrameNum];
+		int handles[kBulletSheetFrameCount];
 		int result = LoadDivGraph(
 			"Data/PlayerBullet.png",
-			kBulletAnimFrameNum,
-			1, kBulletAnimFrameNum,
+			kBulletSheetFrameCount,
+			1, kBulletSheetFrameCount,
 			kPlayerBulletFrameWidth, kPlayerBulletFrameHeight,
 			handles);
 		assert(result == 0);
@@ -117,13 +125,13 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		m_playerBulletAnimHandles.assign(handles, handles + kBulletAnimFrameCount);
 	}
 
-	// 敵弾アニメーションを分割で読み込み
+	// 敵弾アニメーションを7コマ分割で読み込み
 	{
-		int handles[kBulletAnimFrameNum];
+		int handles[kBulletSheetFrameCount];
 		int result = LoadDivGraph(
 			"Data/EnemyBullet.png",
-			kBulletAnimFrameNum,
-			1, kBulletAnimFrameNum,
+			kBulletSheetFrameCount,
+			1, kBulletSheetFrameCount,
 			kEnemyBulletFrameWidth, kEnemyBulletFrameHeight,
 			handles);
 		assert(result == 0);
@@ -143,18 +151,18 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 
 	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight / 2.0f);
 
-	// ステージ番号に対応する弾数上限を適用
+	// ステージ番号(1始まり)に対応する弾数上限を適用
 	int stageIndex = m_stageNo - 1;
 	assert(stageIndex >= 0 && stageIndex < static_cast<int>(std::size(kStageBulletLimits)));
-	m_remainingBullets = kStageBulletLimits[stageIndex];
+	m_totalBullets = kStageBulletLimits[stageIndex];
+	m_remainingBullets = m_totalBullets;
 
 	BuildWaveData();
 	SpawnWave(m_currentWaveIndex);
 }
 
 GameScene::~GameScene()
-{
-}
+{}
 
 void GameScene::Update()
 {
@@ -201,7 +209,7 @@ void GameScene::NormalUpdate()
 		return;
 	}
 
-	// 弾切れかつ、まだ全ウェーブクリアしていない場合はゲームオーバー
+	// 弾切れ(画面上の弾も含めて全て無くなった)かつ、まだ全ウェーブクリアしていない場合はゲームオーバー
 	if (m_remainingBullets <= 0 && m_bullets.empty())
 	{
 		m_isGameOver = true;
@@ -236,7 +244,7 @@ void GameScene::FadeOutUpdate()
 		}
 		else
 		{
-			m_controller.ChangeScene(std::make_shared<ClearScene>(m_controller));
+			m_controller.ChangeScene(std::make_shared<ClearScene>(m_controller, m_player->GetHp(), m_remainingBullets, m_totalBullets));
 		}
 
 		// 自分が死んでいるのでもし余計な処理が入っているとまずいのでreturn;
@@ -257,7 +265,8 @@ void GameScene::UpdateBackgroundScroll()
 
 void GameScene::DrawBackground() const
 {
-	int offsetX = static_cast<int>(m_bgScrollX);
+	// static_castではなくstd::floorを使う(負の値でも一貫して切り捨てるため、1px単位の隙間を防ぐ)
+	int offsetX = static_cast<int>(std::floor(m_bgScrollX));
 
 	// 2枚並べて描画し、繋ぎ目が見えないようにループさせる(画像の実際の幅で並べる)
 	DrawGraph(offsetX, 0, m_stagebgHandle, true);
@@ -305,15 +314,15 @@ void GameScene::BuildWaveData()
 
 		WaveData wave2;
 		wave2.enemies = {
-			// 上から出て時計回りにループ
+			// 上から出て時計回りにループ(角度0 = 一番上)
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
-			// 下から出て、上の個体と常に反対側を保ちながら同じ方向にループ
+			// 下から出て、上の個体と常に反対側を保ちながら同じ方向にループ(角度π = 一番下)
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, kPi },
 		};
 
 		WaveData wave3;
 		wave3.enemies = {
-			// ウェーブ2と逆回転
+			// ウェーブ2と逆回転(反時計回り)
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, 0.0f },
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, kPi },
 		};
@@ -323,8 +332,8 @@ void GameScene::BuildWaveData()
 	}
 	default:
 	{
-		// ステージ3・4のウェーブデータも決まり次第ここに追加する
-		// 仮でステージ1と同じ内容にしておく
+		// TODO: ステージ3・4のウェーブデータも決まり次第ここに追加する
+		// 仮でステージ1と同じ内容にしておく(0件のままだと即クリア扱いになってしまうため)
 		WaveData tempWave;
 		tempWave.enemies = {
 			{ EnemyType::Shooter, kEnemySpawnX, kRowY[1] },
@@ -390,7 +399,7 @@ void GameScene::UpdateBullets()
 		bullet->Update();
 	}
 
-	// 非アクティブな弾をまとめて削除
+	// 非アクティブな弾をまとめて削除(erase-removeイディオム)
 	m_bullets.erase(
 		std::remove_if(m_bullets.begin(), m_bullets.end(),
 			[](const std::unique_ptr<Bullet>& bullet) { return !bullet->IsActive(); }),
@@ -501,19 +510,37 @@ void GameScene::UpdateWaveProgress()
 		return;
 	}
 
-	++m_currentWaveIndex;
-
-	if (m_currentWaveIndex < static_cast<int>(m_waves.size()))
+	if (m_isWaitingNextWave)
 	{
-		SpawnWave(m_currentWaveIndex);
+		--m_waveDelayTimer;
+		if (m_waveDelayTimer > 0)
+		{
+			return;
+		}
+
+		m_isWaitingNextWave = false;
+
+		++m_currentWaveIndex;
+
+		if (m_currentWaveIndex < static_cast<int>(m_waves.size()))
+		{
+			SpawnWave(m_currentWaveIndex);
+		}
+		else
+		{
+			// 全ウェーブクリア → ステージクリアへ
+			m_isGameOver = false;
+			m_update = &GameScene::FadeOutUpdate;
+			m_draw = &GameScene::FadeDraw;
+			m_fadeFrame = 0;
+		}
+
 		return;
 	}
 
-	// 全ウェーブクリア → ステージクリアへ
-	m_isGameOver = false;
-	m_update = &GameScene::FadeOutUpdate;
-	m_draw = &GameScene::FadeDraw;
-	m_fadeFrame = 0;
+	// 敵を全滅させた直後、次のウェーブが出現するまでの待機を開始する
+	m_isWaitingNextWave = true;
+	m_waveDelayTimer = kWaveDelayFrame;
 }
 
 void GameScene::NormalDraw()
@@ -537,15 +564,15 @@ void GameScene::NormalDraw()
 		enemyBullet->Draw();
 	}
 
+	for (const auto& hitEffect : m_hitEffects)
+	{
+		hitEffect->Draw();
+	}
+
 #ifdef _DEBUG
 	if ((m_blinkFrame / 30) % 2 == 0)
 	{
 		DrawString(0, 0, "Game Scene", 0xffffff);
-	}
-
-	for (const auto& hitEffect : m_hitEffects)
-	{
-		hitEffect->Draw();
 	}
 
 	DrawFormatString(0, 20, 0xffffff, "残弾: %d", m_remainingBullets);
@@ -553,7 +580,7 @@ void GameScene::NormalDraw()
 	DrawFormatString(0, 60, 0xffffff, "Wave: %d / %d", m_currentWaveIndex + 1, static_cast<int>(m_waves.size()));
 	DrawFormatString(0, 80, 0xffffff, "Enemies: %d", static_cast<int>(m_enemies.size()));
 
-	// 当たり判定デバッグ表示
+	// 当たり判定デバッグ表示(緑:プレイヤー 赤:敵 水色:自弾 黄:敵弾)
 	DrawCollisionBox(m_player->GetX(), m_player->GetY(), m_player->GetCollisionHalfWidth(), m_player->GetCollisionHalfHeight(), 0x00ff00);
 
 	for (const auto& enemy : m_enemies)

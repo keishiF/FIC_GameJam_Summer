@@ -5,12 +5,14 @@
 class EnemyLooper final : public Enemy
 {
 public:
+	// centerX/centerY: 軌道の中心, radiusX/radiusY: 軌道の半径,
+	// direction: 回転方向(+1:時計回り -1:反時計回り), startAngle: 開始角度(ラジアン、0:軌道の一番上 π:軌道の一番下)
 	EnemyLooper(float centerX, float centerY, float radiusX, float radiusY, int direction, float startAngle);
 	~EnemyLooper();
 
-	virtual void Update() override;
-
 private:
+	virtual void UpdateBehavior() override;
+
 	float m_centerX;
 	float m_centerY;
 	float m_radiusX;

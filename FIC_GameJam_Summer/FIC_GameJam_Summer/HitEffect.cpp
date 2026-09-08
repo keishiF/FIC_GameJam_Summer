@@ -1,10 +1,10 @@
 #include "HitEffect.h"
-#include "HitEffect.h"
 #include <DxLib.h>
 
 namespace
 {
-	constexpr int kAnimInterval = 3;	// 何フレームごとにコマを切り替えるか(お好みで調整)
+	constexpr int kAnimInterval = 3;		// 何フレームごとにコマを切り替えるか(お好みで調整)
+	constexpr float kHitEffectScale = 4.0f;	// 表示拡大率(ここを書き換えれば大きさを調整できる)
 }
 
 HitEffect::HitEffect(float x, float y, const std::vector<int>& animHandles) :
@@ -53,9 +53,14 @@ void HitEffect::Draw() const
 	int height = 0;
 	GetGraphSize(handle, &width, &height);
 
-	DrawGraph(
-		static_cast<int>(m_x - width / 2.0f),
-		static_cast<int>(m_y - height / 2.0f),
+	float halfWidth = (width * kHitEffectScale) / 2.0f;
+	float halfHeight = (height * kHitEffectScale) / 2.0f;
+
+	DrawExtendGraph(
+		static_cast<int>(m_x - halfWidth),
+		static_cast<int>(m_y - halfHeight),
+		static_cast<int>(m_x + halfWidth),
+		static_cast<int>(m_y + halfHeight),
 		handle,
 		true);
 }
