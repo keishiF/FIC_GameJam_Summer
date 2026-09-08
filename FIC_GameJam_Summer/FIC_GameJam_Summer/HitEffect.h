@@ -1,10 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 
 class HitEffect
 {
 public:
-	// animHandles: あらかじめロード済みのヒットエフェクト画像ハンドル配列(所有権はGameScene側)
 	HitEffect(float x, float y, const std::vector<int>& animHandles);
 	~HitEffect();
 

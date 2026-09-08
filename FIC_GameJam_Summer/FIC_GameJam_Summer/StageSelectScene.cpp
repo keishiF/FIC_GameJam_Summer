@@ -24,7 +24,7 @@ StageSelectScene::StageSelectScene(SceneController& controller) :
 	SceneBase(controller),
 	m_playerHandle(-1),
 	m_playerX(0.0f),
-	m_playerY(Game::kScreenHeight / 2.0f),
+	m_playerY(Game::kScreenHeight * 0.5f),
 	m_selectStage(0),
 	m_facingRight(true),
 	m_fadeFrame(kFadeInterval),
@@ -108,10 +108,10 @@ void StageSelectScene::FadeOutUpdate()
 float StageSelectScene::GetStageCenterX(int stageIndex) const
 {
 	int totalWidth = kStageBoxSize * kStageNum + kStageBoxMargin * (kStageNum - 1);
-	int startX = (Game::kScreenWidth - totalWidth) / 2;
+	int startX = static_cast<int>((Game::kScreenWidth - totalWidth) * 0.5f);
 	int boxX = startX + stageIndex * (kStageBoxSize + kStageBoxMargin);
 
-	return static_cast<float>(boxX + kStageBoxSize / 2);
+	return static_cast<float>(boxX + kStageBoxSize * 0.5f);
 }
 
 void StageSelectScene::UpdatePlayerPosition()
@@ -134,15 +134,17 @@ void StageSelectScene::NormalDraw()
 	DrawBox(0, 0, Game::kScreenWidth, Game::kScreenHeight, 0x202020, true);
 
 	int totalWidth = kStageBoxSize * kStageNum + kStageBoxMargin * (kStageNum - 1);
-	int startX = (Game::kScreenWidth - totalWidth) / 2;
-	int y = (Game::kScreenHeight - kStageBoxSize) / 2;
+	int startX = static_cast<int>((Game::kScreenWidth - totalWidth) * 0.5f);
+	int y = static_cast<int>((Game::kScreenHeight - kStageBoxSize) * 0.5f);
 
 	for (int i = 0; i < kStageNum; ++i)
 	{
 		int x = startX + i * (kStageBoxSize + kStageBoxMargin);
 
 		DrawBox(x, y, x + kStageBoxSize, y + kStageBoxSize, 0xffffff, false);
-		DrawFormatString(x + kStageBoxSize / 2 - 8, y + kStageBoxSize / 2 - 8, 0xffffff, "%d", i + 1);
+		DrawFormatString(static_cast<int>(x + kStageBoxSize * 0.5f - 8), 
+			static_cast<int>(y + kStageBoxSize * 0.5f - 8), 
+			0xffffff, "%d", i + 1);
 
 		// 選択中のステージを強調表示
 		if (i == m_selectStage && (m_blinkFrame / 10) % 2 == 0)
@@ -152,8 +154,8 @@ void StageSelectScene::NormalDraw()
 	}
 
 	// プレイヤーキャラクター描画
-	int drawX = static_cast<int>(m_playerX - kPlayerSize / 2.0f);
-	int drawY = static_cast<int>(m_playerY - kPlayerSize / 2.0f);
+	int drawX = static_cast<int>(m_playerX - kPlayerSize * 0.5f);
+	int drawY = static_cast<int>(m_playerY - kPlayerSize * 0.5f);
 
 	if (m_facingRight)
 	{

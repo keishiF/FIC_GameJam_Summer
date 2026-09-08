@@ -1,16 +1,15 @@
 ﻿#include "Bullet.h"
-#include "ClearScene.h"
 #include "Enemy.h"
 #include "EnemyBullet.h"
 #include "EnemyLooper.h"
 #include "EnemyMover.h"
 #include "EnemyShooter.h"
 #include "game.h"
-#include "GameOverScene.h"
 #include "GameScene.h"
 #include "HitEffect.h"
 #include "Input.h"
 #include "Player.h"
+#include "ResultScene.h"
 #include "SceneController.h"
 #include "TitleScene.h"
 #include <algorithm>
@@ -66,10 +65,10 @@ namespace
 	constexpr float kLeftColumnX = kEnemySpawnX - kGridColumnWidth;
 
 	// ステージ2 ウェーブ2/3: ループ移動の軌道パラメータ(左右グリッドの間、上下グリッド範囲全体を使用)
-	constexpr float kLoopCenterX = (kLeftColumnX + kRightColumnX) / 2.0f;
-	constexpr float kLoopCenterY = (kRowY[0] + kRowY[3]) / 2.0f;
-	constexpr float kLoopRadiusX = (kRightColumnX - kLeftColumnX) / 2.0f;
-	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) / 2.0f;
+	constexpr float kLoopCenterX = (kLeftColumnX + kRightColumnX) * 0.5f;
+	constexpr float kLoopCenterY = (kRowY[0] + kRowY[3]) * 0.5f;
+	constexpr float kLoopRadiusX = (kRightColumnX - kLeftColumnX) * 0.5f;
+	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) * 0.5f;
 
 #ifdef _DEBUG
 	// 当たり判定デバッグ表示用の矩形描画
@@ -149,7 +148,7 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		m_hitEffectHandles.push_back(handle);
 	}
 
-	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight / 2.0f);
+	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight * 0.5f);
 
 	// ステージ番号(1始まり)に対応する弾数上限を適用
 	int stageIndex = m_stageNo - 1;
@@ -238,14 +237,9 @@ void GameScene::FadeOutUpdate()
 
 	if (m_fadeFrame++ >= kFadeInterval)
 	{
-		if (m_isGameOver)
-		{
-			m_controller.ChangeScene(std::make_shared<GameOverScene>(m_controller));
-		}
-		else
-		{
-			m_controller.ChangeScene(std::make_shared<ClearScene>(m_controller, m_player->GetHp(), m_remainingBullets, m_totalBullets));
-		}
+		// クリア・ゲームオーバーどちらもResultSceneで結果表示を行う
+		bool isClear = !m_isGameOver;
+		m_controller.ChangeScene(std::make_shared<ResultScene>(m_controller, isClear, m_player->GetHp(), m_remainingBullets, m_totalBullets));
 
 		// 自分が死んでいるのでもし余計な処理が入っているとまずいのでreturn;
 		return;

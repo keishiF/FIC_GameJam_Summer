@@ -1,33 +1,36 @@
 ﻿#pragma once
 #include "SceneBase.h"
 
-class ClearScene final : public SceneBase
+class ResultScene final : public SceneBase
 {
 public:
-	// hp: クリア時の残りHP, remainingBullets: クリア時の残弾数, totalBullets: そのステージの弾数上限
-	ClearScene(SceneController& controller, int hp, int remainingBullets, int totalBullets);
-	~ClearScene();
+	// isClear: ステージクリアかどうか(falseならゲームオーバー)
+	// hp: 終了時の残りHP, remainingBullets: 終了時の残弾数, totalBullets: そのステージの弾数上限
+	ResultScene(SceneController& controller, bool isClear, int hp, int remainingBullets, int totalBullets);
+	~ResultScene();
 
 	virtual void Update() override;
 	virtual void Draw() override;
 
 private:
+	bool m_isClear;
 	int m_hp;
 	int m_remainingBullets;
 	int m_totalBullets;
 
+	int m_baseScore;
 	int m_hpScore;
 	int m_bulletScore;
 	int m_totalScore;
 
-	int m_resultPhase;	// 0:クリア表示 1:HPスコア表示 2:弾スコア表示 3:合計スコア表示
+	int m_resultPhase;	// 0:基礎点表示 1:HPスコア表示 2:弾スコア表示 3:合計スコア表示
 	int m_phaseTimer;	// 各フェーズの経過フレーム数(自動送り用)
 
 	float m_fadeFrame;
 	int m_blinkFrame;
 
-	using UpdateFunc_t = void(ClearScene::*)();
-	using DrawFunc_t = void(ClearScene::*)();
+	using UpdateFunc_t = void(ResultScene::*)();
+	using DrawFunc_t = void(ResultScene::*)();
 
 	UpdateFunc_t m_update;
 	DrawFunc_t m_draw;

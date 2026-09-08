@@ -40,7 +40,7 @@ void Bullet::Update()
 	m_x += kBulletSpeed;
 
 	// 画面外に出たら非アクティブ化
-	if (m_x - kBulletWidth / 2.0f > Game::kScreenWidth)
+	if (m_x - kBulletWidth * 0.5f > Game::kScreenWidth)
 	{
 		m_isActive = false;
 	}
@@ -62,8 +62,8 @@ void Bullet::Draw() const
 	}
 
 	DrawGraph(
-		static_cast<int>(m_x - kBulletWidth / 2.0f),
-		static_cast<int>(m_y - kBulletHeight / 2.0f),
+		static_cast<int>(m_x - kBulletWidth * 0.5f),
+		static_cast<int>(m_y - kBulletHeight * 0.5f),
 		m_animHandles[m_animFrame],
 		true);
 }

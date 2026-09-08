@@ -1,4 +1,4 @@
-#include "EnemyBullet.h"
+ï»¿#include "EnemyBullet.h"
 #include <cmath>
 #include <DxLib.h>
 
@@ -7,10 +7,10 @@ namespace
 	constexpr float kEnemyBulletSpeed = 8.0f;
 	constexpr int kEnemyBulletWidth = 128;
 	constexpr int kEnemyBulletHeight = 64;
-	// ‰½ƒtƒŒ[ƒ€‚²‚Æ‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚ÌƒRƒ}‚ğØ‚è‘Ö‚¦‚é‚©
+	// ä½•ãƒ•ãƒ¬ãƒ¼ãƒ ã”ã¨ã«ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®ã‚³ãƒã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹ã‹
 	constexpr int kAnimInterval = 4;
 
-	// “–‚½‚è”»’è—p‚ÌƒTƒCƒY
+	// å½“ãŸã‚Šåˆ¤å®šç”¨ã®ã‚µã‚¤ã‚º
 	constexpr float kCollisionHalfWidth = 20.0f;
 	constexpr float kCollisionHalfHeight = 10.0f;
 }
@@ -38,12 +38,12 @@ void EnemyBullet::Update()
 
 	m_x -= kEnemyBulletSpeed;
 
-	if (m_x + kEnemyBulletWidth / 2.0f < 0)
+	if (m_x + kEnemyBulletWidth * 0.5f < 0)
 	{
 		m_isActive = false;
 	}
 
-	// ƒAƒjƒ[ƒVƒ‡ƒ“XV
+	// ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³æ›´æ–°
 	++m_animTimer;
 	if (m_animTimer >= kAnimInterval)
 	{
@@ -60,8 +60,8 @@ void EnemyBullet::Draw() const
 	}
 
 	DrawGraph(
-		static_cast<int>(m_x - kEnemyBulletWidth / 2.0f),
-		static_cast<int>(m_y - kEnemyBulletHeight / 2.0f),
+		static_cast<int>(m_x - kEnemyBulletWidth * 0.5f),
+		static_cast<int>(m_y - kEnemyBulletHeight * 0.5f),
 		m_animHandles[m_animFrame],
 		true);
 }

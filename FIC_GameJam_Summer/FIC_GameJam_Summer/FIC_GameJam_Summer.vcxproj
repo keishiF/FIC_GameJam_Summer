@@ -145,18 +145,17 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="ClearScene.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="EnemyLooper.cpp" />
     <ClCompile Include="EnemyMover.cpp" />
     <ClCompile Include="EnemyShooter.cpp" />
-    <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="HitEffect.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="ResultScene.cpp" />
     <ClCompile Include="SceneBase.cpp" />
     <ClCompile Include="SceneController.cpp" />
     <ClCompile Include="StageSelectScene.cpp" />
@@ -165,18 +164,17 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Bullet.h" />
-    <ClInclude Include="ClearScene.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="EnemyBullet.h" />
     <ClInclude Include="EnemyLooper.h" />
     <ClInclude Include="EnemyMover.h" />
     <ClInclude Include="EnemyShooter.h" />
     <ClInclude Include="game.h" />
-    <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="HitEffect.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="ResultScene.h" />
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="SceneController.h" />
     <ClInclude Include="StageSelectScene.h" />

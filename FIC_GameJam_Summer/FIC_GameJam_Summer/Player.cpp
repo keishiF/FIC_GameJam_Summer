@@ -100,12 +100,12 @@ void Player::Move()
 
 float Player::GetHalfWidth() const
 {
-	return (m_graphWidth * m_scale) / 2.0f;
+	return (m_graphWidth * m_scale) * 0.5f;
 }
 
 float Player::GetHalfHeight() const
 {
-	return (m_graphHeight * m_scale) / 2.0f;
+	return (m_graphHeight * m_scale) * 0.5f;
 }
 
 float Player::GetCollisionHalfWidth() const

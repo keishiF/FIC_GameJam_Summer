@@ -1,4 +1,4 @@
-#include "HitEffect.h"
+﻿#include "HitEffect.h"
 #include <DxLib.h>
 
 namespace
@@ -53,8 +53,8 @@ void HitEffect::Draw() const
 	int height = 0;
 	GetGraphSize(handle, &width, &height);
 
-	float halfWidth = (width * kHitEffectScale) / 2.0f;
-	float halfHeight = (height * kHitEffectScale) / 2.0f;
+	float halfWidth = (width * kHitEffectScale) * 0.5f;
+	float halfHeight = (height * kHitEffectScale) * 0.5f;
 
 	DrawExtendGraph(
 		static_cast<int>(m_x - halfWidth),

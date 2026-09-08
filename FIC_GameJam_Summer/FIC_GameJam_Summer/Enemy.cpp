@@ -1,4 +1,4 @@
-#include "Enemy.h"
+﻿#include "Enemy.h"
 #include <cmath>
 #include <DxLib.h>
 
@@ -61,12 +61,12 @@ void Enemy::TakeDamage(int damage)
 
 float Enemy::GetHalfWidth() const
 {
-	return (m_graphWidth * m_scale) / 2.0f;
+	return (m_graphWidth * m_scale) * 0.5f;
 }
 
 float Enemy::GetHalfHeight() const
 {
-	return (m_graphHeight * m_scale) / 2.0f;
+	return (m_graphHeight * m_scale) * 0.5f;
 }
 
 float Enemy::GetCollisionHalfWidth() const
