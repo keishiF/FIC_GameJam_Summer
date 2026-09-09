@@ -3,11 +3,16 @@
 #include <memory>
 #include <vector>
 
+class Physics;
+class StageObjectManager;
+class GameObjectManager;
+class UIManager;
 class Player;
 class Bullet;
 class Enemy;
 class EnemyBullet;
 class HitEffect;
+
 class GameScene final : public SceneBase
 {
 private:
@@ -25,10 +30,10 @@ private:
 		EnemyType type;
 		float x;			// 出現X座標、Looperでは中心X座標
 		float y;			// 出現Y座標、Looperでは中心Y座標
-		float radiusX;		// 横方向の半径
-		float radiusY;		// 縦方向の半径
-		int direction;		// Mover: 初期移動方向 / Looper: 回転方向
-		float startAngle;	// 開始角度(ラジアン)
+		float radiusX;		// Looper専用: 横方向の半径(他タイプでは未使用)
+		float radiusY;		// Looper専用: 縦方向の半径(他タイプでは未使用)
+		int direction;		// Mover: 初期移動方向(+1:下 -1:上) / Looper: 回転方向(+1:時計回り -1:反時計回り)
+		float startAngle;	// Looper専用: 開始角度(ラジアン、他タイプでは未使用)
 	};
 
 	// 1ウェーブ分の出現情報
@@ -47,7 +52,7 @@ public:
 private:
 	int m_stageNo;
 	int m_stagebgHandle;
-	int m_bgWidth;	// 背景画像の横幅
+	int m_bgWidth;	// 背景画像の実際の横幅
 
 	float m_bgScrollX;	// 背景スクロール用オフセット
 
@@ -70,7 +75,11 @@ private:
 	bool m_isWaitingNextWave;	// 次のウェーブ出現まで待機中かどうか
 	int m_waveDelayTimer;		// 待機残りフレーム数
 
-	bool m_isGameOver;				// フェードアウト後の遷移先を分けるためのフラグ
+	// フェードアウト後の遷移先を分けるためのフラグ
+	bool m_isGameOver;
+
+	int m_heartIconHandle;
+	int m_ammoIconHandle;
 
 	float m_fadeFrame;
 	int m_blinkFrame;
@@ -86,6 +95,11 @@ private:
 	void FadeInUpdate();
 	// フェードアウト
 	void FadeOutUpdate();
+
+	// クリア演出: プレイヤーを画面中央へ移動させる
+	void ClearMoveToCenterUpdate();
+	// クリア演出: プレイヤーを画面右へ飛ばす
+	void ClearFlyOutUpdate();
 
 	// 通常時描画
 	void NormalDraw();
@@ -104,6 +118,8 @@ private:
 
 	// 敵の更新・敵の弾生成トリガー確認
 	void UpdateEnemies();
+	// Shooter同士が近づきすぎている場合に押し合わせる
+	void ApplyShooterRepulsion();
 	// 敵の弾の更新・削除
 	void UpdateEnemyBullets();
 	// ヒットエフェクトの更新・削除
@@ -119,4 +135,7 @@ private:
 	void UpdateBackgroundScroll();
 	// 背景を2枚並べてループ描画する
 	void DrawBackground() const;
+
+	// 残HP・残弾数のUI描画
+	void DrawUI() const;
 };

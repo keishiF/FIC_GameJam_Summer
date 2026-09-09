@@ -33,8 +33,10 @@ namespace
 	constexpr int kEnemyBulletFrameWidth = 128;
 	constexpr int kEnemyBulletFrameHeight = 64;
 
-	constexpr int kBulletAnimFrameNum = 7;	// アニメーションのコマの総数
-	constexpr int kBulletAnimFrameCount = 6;	// 1コマに使うフレーム数
+	// アニメーションの総コマ数
+	constexpr int kBulletAnimFrameNum = 7;
+	// 1コマに使うフレーム数
+	constexpr int kBulletAnimFrameCount = 6;
 
 	// ステージごとの弾数上限
 	constexpr int kStageBulletLimits[] = { 21, 22, 23, 24 };
@@ -70,12 +72,25 @@ namespace
 	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) / 2.0f;
 
 	// ステージ2 ウェーブ1: 画面上半分・下半分でそれぞれ円を描く敵の軌道パラメータ
-	// 半径
-	constexpr float kWave1LoopRadius = 150.0f;
-	// 画面上半分の中心Y
-	constexpr float kWave1UpperCenterY = kGridRowHeight;
-	// 画面下半分の中心Y
-	constexpr float kWave1LowerCenterY = Game::kScreenHeight - kGridRowHeight;
+	constexpr float kWave1LoopRadius = 150.0f;								// 半径(ここを書き換えれば円の大きさを調整できる)
+	constexpr float kWave1UpperCenterY = kGridRowHeight;						// 画面上半分の中心Y
+	constexpr float kWave1LowerCenterY = Game::kScreenHeight - kGridRowHeight;	// 画面下半分の中心Y
+
+	// EnemyShooter同士が近づきすぎた場合に押し合う距離の余白
+	constexpr float kShooterRepulsionMargin = 20.0f;
+
+	// クリア演出: プレイヤーが中央へ移動する速度、画面右へ飛んでいく速度
+	constexpr float kClearMoveSpeed = 6.0f;
+	constexpr float kClearFlyOutSpeed = 15.0f;
+
+	// UIアイコンの表示拡大率・配置
+	constexpr float kUiIconScale = 4.0f;
+	constexpr int kUiMarginX = 20;
+	constexpr int kUiMarginY = 20;
+	// ハート同士の間隔
+	constexpr int kUiHeartSpacing = 60;	
+	// ハート行と弾薬行の縦間隔
+	constexpr int kUiRowSpacing = 60;
 
 #ifdef _DEBUG
 	// 当たり判定デバッグ表示用の矩形描画
@@ -113,7 +128,7 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 	m_stagebgHandle = LoadGraph(bgPath.c_str());
 	assert(m_stagebgHandle > 0);
 
-	// 背景の幅を取得
+	// 背景の実際の幅を取得
 	int dummyHeight = 0;
 	GetGraphSize(m_stagebgHandle, &m_bgWidth, &dummyHeight);
 
@@ -145,7 +160,7 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		m_enemyBulletAnimHandles.assign(handles, handles + kBulletAnimFrameCount);
 	}
 
-	// ヒットエフェクト画像を8枚まとめて読み込み
+	// ヒットエフェクト画像を読み込み
 	m_hitEffectHandles.reserve(8);
 	for (int i = 1; i <= 8; ++i)
 	{
@@ -154,6 +169,12 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 		assert(handle > 0);
 		m_hitEffectHandles.push_back(handle);
 	}
+
+	m_heartIconHandle = LoadGraph("Data/Heart.png");
+	assert(m_heartIconHandle > 0);
+
+	m_ammoIconHandle = LoadGraph("Data/Ammo.png");
+	assert(m_ammoIconHandle > 0);
 
 	m_player = std::make_unique<Player>(200.0f, Game::kScreenHeight / 2.0f);
 
@@ -192,6 +213,7 @@ void GameScene::NormalUpdate()
 
 	UpdateBullets();
 	UpdateEnemies();
+	ApplyShooterRepulsion();
 	UpdateEnemyBullets();
 	UpdateHitEffects();
 
@@ -199,7 +221,7 @@ void GameScene::NormalUpdate()
 
 	UpdateWaveProgress();
 
-	// ウェーブ進行処理内で既にステージクリアへ切り替わっている場合はここで終了
+	// ウェーブ進行処理内で既に別の状態へ切り替わっている場合はここで終了
 	if (m_update != &GameScene::NormalUpdate)
 	{
 		return;
@@ -250,6 +272,46 @@ void GameScene::FadeOutUpdate()
 
 		// 自分が死んでいるのでもし余計な処理が入っているとまずいのでreturn;
 		return;
+	}
+}
+
+void GameScene::ClearMoveToCenterUpdate()
+{
+	UpdateBackgroundScroll();
+
+	float centerX = Game::kScreenWidth / 2.0f;
+	float centerY = Game::kScreenHeight / 2.0f;
+
+	float dx = centerX - m_player->GetX();
+	float dy = centerY - m_player->GetY();
+
+	// 中央にほぼ到達したら次の演出へ切り替える
+	if (std::abs(dx) <= kClearMoveSpeed && std::abs(dy) <= kClearMoveSpeed)
+	{
+		m_player->SetPosition(centerX, centerY);
+		m_update = &GameScene::ClearFlyOutUpdate;
+		return;
+	}
+
+	float moveX = std::clamp(dx, -kClearMoveSpeed, kClearMoveSpeed);
+	float moveY = std::clamp(dy, -kClearMoveSpeed, kClearMoveSpeed);
+
+	m_player->SetPosition(m_player->GetX() + moveX, m_player->GetY() + moveY);
+}
+
+void GameScene::ClearFlyOutUpdate()
+{
+	UpdateBackgroundScroll();
+
+	m_player->SetPosition(m_player->GetX() + kClearFlyOutSpeed, m_player->GetY());
+
+	// 完全に画面外へ出たらフェードアウトへ
+	if (m_player->GetX() - m_player->GetHalfWidth() > Game::kScreenWidth)
+	{
+		m_isGameOver = false;
+		m_update = &GameScene::FadeOutUpdate;
+		m_draw = &GameScene::FadeDraw;
+		m_fadeFrame = 0;
 	}
 }
 
@@ -322,7 +384,7 @@ void GameScene::BuildWaveData()
 
 		WaveData wave3;
 		wave3.enemies = {
-			// ウェーブ2と逆回転
+			// ウェーブ2と逆回転(反時計回り)
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, 0.0f },
 			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, -1, kPi },
 		};
@@ -359,6 +421,7 @@ void GameScene::SpawnWave(int waveIndex)
 		switch (spawnInfo.type)
 		{
 		case EnemyType::Shooter:
+			// 移動可能範囲はグリッド全体
 			m_enemies.push_back(std::make_unique<EnemyShooter>(
 				spawnInfo.x, spawnInfo.y, kRowY[0], kRowY[3], *m_player));
 			break;
@@ -421,6 +484,59 @@ void GameScene::UpdateEnemies()
 		if (enemy->IsShotTriggered())
 		{
 			m_enemyBullets.push_back(std::make_unique<EnemyBullet>(enemy->GetX(), enemy->GetY(), m_enemyBulletAnimHandles));
+		}
+	}
+}
+
+void GameScene::ApplyShooterRepulsion()
+{
+	// 生存中のEnemyShooterだけを抽出する
+	std::vector<EnemyShooter*> shooters;
+	for (auto& enemy : m_enemies)
+	{
+		if (!enemy->IsAlive())
+		{
+			continue;
+		}
+
+		if (auto* shooter = dynamic_cast<EnemyShooter*>(enemy.get()))
+		{
+			shooters.push_back(shooter);
+		}
+	}
+
+	// 総当たりで距離をチェックし、近すぎる場合は互いに押し出す
+	for (size_t i = 0; i < shooters.size(); ++i)
+	{
+		for (size_t j = i + 1; j < shooters.size(); ++j)
+		{
+			EnemyShooter* a = shooters[i];
+			EnemyShooter* b = shooters[j];
+
+			float minDistance = a->GetCollisionHalfHeight() + b->GetCollisionHalfHeight() + kShooterRepulsionMargin;
+			float diff = b->GetY() - a->GetY();
+			float distance = std::abs(diff);
+
+			if (distance >= minDistance)
+			{
+				continue;
+			}
+
+			float overlap = minDistance - distance;
+			float pushEach = overlap / 2.0f;
+
+			// 完全に重なっている場合はdiffが0になり方向が決められないため、適当な向きを与える
+			float dir = (distance > 0.0f) ? ((diff > 0.0f) ? 1.0f : -1.0f) : 1.0f;
+
+			float newAY = a->GetY() - dir * pushEach;
+			float newBY = b->GetY() + dir * pushEach;
+
+			// 移動可能範囲からはみ出さないようクランプ
+			newAY = std::clamp(newAY, kRowY[0], kRowY[3]);
+			newBY = std::clamp(newBY, kRowY[0], kRowY[3]);
+
+			a->SetY(newAY);
+			b->SetY(newBY);
 		}
 	}
 }
@@ -529,11 +645,9 @@ void GameScene::UpdateWaveProgress()
 		}
 		else
 		{
-			// 全ウェーブクリア → ステージクリアへ
-			m_isGameOver = false;
-			m_update = &GameScene::FadeOutUpdate;
-			m_draw = &GameScene::FadeDraw;
-			m_fadeFrame = 0;
+			// 全ウェーブクリア → クリア演出を開始する
+			m_update = &GameScene::ClearMoveToCenterUpdate;
+			m_draw = &GameScene::NormalDraw;
 		}
 
 		return;
@@ -542,6 +656,41 @@ void GameScene::UpdateWaveProgress()
 	// 敵を全滅させた直後、次のウェーブが出現するまでの待機を開始する
 	m_isWaitingNextWave = true;
 	m_waveDelayTimer = kWaveDelayFrame;
+}
+
+void GameScene::DrawUI() const
+{
+	int heartWidth = 0;
+	int heartHeight = 0;
+	GetGraphSize(m_heartIconHandle, &heartWidth, &heartHeight);
+
+	int scaledHeartW = static_cast<int>(heartWidth * kUiIconScale);
+	int scaledHeartH = static_cast<int>(heartHeight * kUiIconScale);
+
+	// 残HPの数だけハートを横並びで表示
+	int hp = m_player->GetHp();
+	for (int i = 0; i < hp; ++i)
+	{
+		int x = kUiMarginX + i * kUiHeartSpacing;
+		int y = kUiMarginY;
+
+		DrawExtendGraph(x, y, x + scaledHeartW, y + scaledHeartH, m_heartIconHandle, true);
+	}
+
+	// 弾薬アイコン + 残弾数
+	int ammoWidth = 0;
+	int ammoHeight = 0;
+	GetGraphSize(m_ammoIconHandle, &ammoWidth, &ammoHeight);
+
+	int scaledAmmoW = static_cast<int>(ammoWidth * kUiIconScale);
+	int scaledAmmoH = static_cast<int>(ammoHeight * kUiIconScale);
+
+	int ammoIconX = kUiMarginX;
+	int ammoIconY = kUiMarginY + kUiRowSpacing;
+
+	DrawExtendGraph(ammoIconX, ammoIconY, ammoIconX + scaledAmmoW, ammoIconY + scaledAmmoH, m_ammoIconHandle, true);
+
+	DrawFormatString(ammoIconX + scaledAmmoW + 10, ammoIconY + 10, 0xffffff, "×  %d", m_remainingBullets);
 }
 
 void GameScene::NormalDraw()
@@ -570,8 +719,10 @@ void GameScene::NormalDraw()
 		hitEffect->Draw();
 	}
 
+	DrawUI();
+
 #ifdef _DEBUG
-	if ((m_blinkFrame / 30) % 2 == 0)
+	/*if ((m_blinkFrame / 30) % 2 == 0)
 	{
 		DrawString(0, 0, "Game Scene", 0xffffff);
 	}
@@ -579,7 +730,7 @@ void GameScene::NormalDraw()
 	DrawFormatString(0, 20, 0xffffff, "残弾: %d", m_remainingBullets);
 	DrawFormatString(0, 40, 0xffffff, "HP: %d", m_player->GetHp());
 	DrawFormatString(0, 60, 0xffffff, "Wave: %d / %d", m_currentWaveIndex + 1, static_cast<int>(m_waves.size()));
-	DrawFormatString(0, 80, 0xffffff, "Enemies: %d", static_cast<int>(m_enemies.size()));
+	DrawFormatString(0, 80, 0xffffff, "Enemies: %d", static_cast<int>(m_enemies.size()));*/
 
 	// 当たり判定デバッグ表示(緑:プレイヤー 赤:敵 水色:自弾 黄:敵弾)
 	DrawCollisionBox(m_player->GetX(), m_player->GetY(), m_player->GetCollisionHalfWidth(), m_player->GetCollisionHalfHeight(), 0x00ff00);

@@ -6,7 +6,7 @@ public:
 	Enemy(float x, float y, int handle, int hp, float scale, float collisionScale);
 	virtual ~Enemy();
 
-	// 更新
+	// 入場演出込みの更新
 	void Update();
 	virtual void Draw() const;
 
@@ -17,6 +17,8 @@ public:
 
 	float GetX() const { return m_x; }
 	float GetY() const { return m_y; }
+
+	void SetY(float y) { m_y = y; }
 
 	// 見た目上の半分のサイズ
 	float GetHalfWidth() const;
@@ -33,7 +35,6 @@ public:
 	bool IsEntering() const { return m_isEntering; }
 
 protected:
-	// 各敵ごとの本来の行動
 	virtual void UpdateBehavior() = 0;
 
 	int m_handle;
