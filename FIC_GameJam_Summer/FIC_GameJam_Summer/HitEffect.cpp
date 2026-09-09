@@ -3,8 +3,8 @@
 
 namespace
 {
-	constexpr int kAnimInterval = 3;		// 何フレームごとにコマを切り替えるか(お好みで調整)
-	constexpr float kHitEffectScale = 4.0f;	// 表示拡大率(ここを書き換えれば大きさを調整できる)
+	constexpr int kAnimInterval = 3;		// 何フレームごとにコマを切り替えるか
+	constexpr float kHitEffectScale = 4.0f;	// 表示拡大率
 }
 
 HitEffect::HitEffect(float x, float y, const std::vector<int>& animHandles) :
