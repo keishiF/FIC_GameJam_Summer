@@ -159,6 +159,7 @@
     <ClCompile Include="SceneBase.cpp" />
     <ClCompile Include="SceneController.cpp" />
     <ClCompile Include="StageSelectScene.cpp" />
+    <ClCompile Include="TextDraw.cpp" />
     <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="SceneController.h" />
     <ClInclude Include="StageSelectScene.h" />
+    <ClInclude Include="TextDraw.h" />
     <ClInclude Include="TitleScene.h" />
     <ClInclude Include="Vector3.h" />
   </ItemGroup>

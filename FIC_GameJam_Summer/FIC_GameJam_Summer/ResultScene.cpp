@@ -3,6 +3,8 @@
 #include "Input.h"
 #include "SceneController.h"
 #include "StageSelectScene.h"
+#include "TextDraw.h"
+#include <cstdio>
 #include <DxLib.h>
 
 namespace
@@ -13,7 +15,7 @@ namespace
 	constexpr int kClearBaseScore = 10000;
 	constexpr int kGameOverBaseScore = 0;
 
-	// 残HPスコア: HP1につき何点か(固定値、ここを書き換えれば調整できる)
+	// 残り体力スコア: 1につき何点か(固定値、ここを書き換えれば調整できる)
 	constexpr int kHpScorePerPoint = 1000;
 
 	// 残弾スコア: 残弾1発につき何点か(固定値、ここを書き換えれば調整できる)
@@ -26,6 +28,39 @@ namespace
 	constexpr int kPhaseHpScore = 1;
 	constexpr int kPhaseBulletScore = 2;
 	constexpr int kPhaseTotalScore = 3;
+
+	// レイアウト用の固定座標(ここを書き換えれば配置を調整できる)
+	constexpr int kTitleY = 100;
+	constexpr int kLabelX = 420;			// ラベルの左揃え位置
+	constexpr int kValueRightX = 760;		// 数値の右揃え位置(ここに右端を合わせる)
+	constexpr int kPtGapX = 15;			// 数値の右端から"pt"までの隙間
+
+	constexpr int kLineStartY = 220;
+	constexpr int kLineHeight = 60;
+	constexpr int kTotalExtraGap = 40;		// 合計行の前に空ける追加の余白
+
+	constexpr unsigned int kTextColor = 0xffffff;
+	constexpr unsigned int kEdgeColor = 0x000000;
+
+	void DrawScoreLine(int y, const char* label, int score, bool withPlusSign, TextDraw::FontType fontType)
+	{
+		TextDraw::DrawOutlinedText(kLabelX, y, label, kTextColor, kEdgeColor, fontType);
+
+		char valueText[32];
+		if (withPlusSign)
+		{
+			snprintf(valueText, sizeof(valueText), "+%d", score);
+		}
+		else
+		{
+			snprintf(valueText, sizeof(valueText), "%d", score);
+		}
+
+		int valueWidth = TextDraw::GetTextWidth(valueText, fontType);
+		TextDraw::DrawOutlinedText(kValueRightX - valueWidth, y, valueText, kTextColor, kEdgeColor, fontType);
+
+		TextDraw::DrawOutlinedText(kValueRightX + kPtGapX, y, "pt", kTextColor, kEdgeColor, fontType);
+	}
 }
 
 ResultScene::ResultScene(SceneController& controller, bool isClear, int hp, int remainingBullets, int totalBullets) :
@@ -121,29 +156,37 @@ void ResultScene::NormalDraw()
 	unsigned int bgColor = m_isClear ? 0x002040 : 0x400000;
 	DrawBox(0, 0, Game::kScreenWidth, Game::kScreenHeight, bgColor, true);
 
+	// タイトルはBell MTフォント、中央揃え
 	const char* titleText = m_isClear ? "STAGE CLEAR" : "GAME OVER";
-	const char* resultLabel = m_isClear ? "クリア" : "クリアならず";
+	int titleWidth = TextDraw::GetTextWidth(titleText, TextDraw::FontType::Title);
+	TextDraw::DrawOutlinedText((Game::kScreenWidth - titleWidth) / 2, kTitleY, titleText, kTextColor, kEdgeColor, TextDraw::FontType::Title);
 
-	DrawFormatString(static_cast<int>(Game::kScreenWidth * 0.5f - 100), 100, 0xffffff, "%s", titleText);
-	DrawFormatString(static_cast<int>(Game::kScreenWidth * 0.5f - 150), 200, 0xffffff, "%s　　　%d pt", resultLabel, m_baseScore);
+	// 基礎点(クリア/クリアならず)は常に表示(標準フォント)
+	const char* baseLabel = m_isClear ? "クリア" : "クリアならず";
+	DrawScoreLine(kLineStartY, baseLabel, m_baseScore, false, TextDraw::FontType::Default);
 
 	if (m_resultPhase >= kPhaseHpScore)
 	{
-		DrawFormatString(static_cast<int>(Game::kScreenWidth * 0.5f - 150), 250, 0xffffff, "残HP　　　+%d pt", m_hpScore);
+		// 残り体力: HG教科書体
+		DrawScoreLine(kLineStartY + kLineHeight, "残り体力", m_hpScore, true, TextDraw::FontType::Ui);
 	}
 
 	if (m_resultPhase >= kPhaseBulletScore)
 	{
-		DrawFormatString(static_cast<int>(Game::kScreenWidth * 0.5f - 150), 300, 0xffffff, "残弾数　　　+%d pt", m_bulletScore);
+		// 残弾数: HG教科書体
+		DrawScoreLine(kLineStartY + kLineHeight * 2, "残弾数", m_bulletScore, true, TextDraw::FontType::Ui);
 	}
 
 	if (m_resultPhase >= kPhaseTotalScore)
 	{
-		DrawFormatString(static_cast<int>(Game::kScreenWidth * 0.5f - 150), 380, 0xffffff, "合計　　　%d pt", m_totalScore);
+		int totalY = kLineStartY + kLineHeight * 3 + kTotalExtraGap;
+		DrawScoreLine(totalY, "合計", m_totalScore, false, TextDraw::FontType::Default);
 
 		if ((m_blinkFrame / 30) % 2 == 0)
 		{
-			DrawString(static_cast<int>(Game::kScreenWidth * 0.5f - 90), 450, "Press OK", 0xffffff);
+			const char* pressText = "Press OK";
+			int pressWidth = TextDraw::GetTextWidth(pressText);
+			TextDraw::DrawOutlinedText((Game::kScreenWidth - pressWidth) / 2, totalY + 80, pressText, kTextColor, kEdgeColor);
 		}
 	}
 }

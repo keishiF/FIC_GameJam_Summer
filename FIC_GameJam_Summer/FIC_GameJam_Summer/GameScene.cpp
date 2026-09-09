@@ -11,13 +11,14 @@
 #include "Player.h"
 #include "ResultScene.h"
 #include "SceneController.h"
+#include "TextDraw.h"
 #include "TitleScene.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <DxLib.h>
 #include <iterator>
 #include <string>
-#include <DxLib.h>
 
 namespace
 {
@@ -667,7 +668,7 @@ void GameScene::DrawUI() const
 	int scaledHeartW = static_cast<int>(heartWidth * kUiIconScale);
 	int scaledHeartH = static_cast<int>(heartHeight * kUiIconScale);
 
-	// 残HPの数だけハートを横並びで表示
+	// 残り体力の数だけハートを横並びで表示
 	int hp = m_player->GetHp();
 	for (int i = 0; i < hp; ++i)
 	{
@@ -677,7 +678,7 @@ void GameScene::DrawUI() const
 		DrawExtendGraph(x, y, x + scaledHeartW, y + scaledHeartH, m_heartIconHandle, true);
 	}
 
-	// 弾薬アイコン + 残弾数
+	// 弾薬アイコン + 残弾数(HG教科書体)
 	int ammoWidth = 0;
 	int ammoHeight = 0;
 	GetGraphSize(m_ammoIconHandle, &ammoWidth, &ammoHeight);
@@ -690,7 +691,7 @@ void GameScene::DrawUI() const
 
 	DrawExtendGraph(ammoIconX, ammoIconY, ammoIconX + scaledAmmoW, ammoIconY + scaledAmmoH, m_ammoIconHandle, true);
 
-	DrawFormatString(ammoIconX + scaledAmmoW + 10, ammoIconY + 10, 0xffffff, "×  %d", m_remainingBullets);
+	TextDraw::DrawFormatOutlinedText(ammoIconX + scaledAmmoW + 10, ammoIconY, 0xffffff, 0x000000, TextDraw::FontType::Ui, "×  %d", m_remainingBullets);
 }
 
 void GameScene::NormalDraw()

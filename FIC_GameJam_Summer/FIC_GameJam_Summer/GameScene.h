@@ -3,10 +3,6 @@
 #include <memory>
 #include <vector>
 
-class Physics;
-class StageObjectManager;
-class GameObjectManager;
-class UIManager;
 class Player;
 class Bullet;
 class Enemy;

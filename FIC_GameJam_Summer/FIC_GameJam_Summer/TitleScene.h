@@ -34,4 +34,3 @@ private:
 	// フェード時の描画
 	void FadeDraw();
 };
-

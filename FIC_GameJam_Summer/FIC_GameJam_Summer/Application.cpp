@@ -2,6 +2,7 @@
 #include "game.h"
 #include "Input.h"
 #include "SceneController.h"
+#include "TextDraw.h"
 #include <cassert>
 #include <DxLib.h>
 
@@ -28,6 +29,8 @@ bool Application::Init()
 
 	// 描画先を裏画面にする
 	SetDrawScreen(DX_SCREEN_BACK);
+
+	TextDraw::InitFonts();
 
 	return true;
 }
