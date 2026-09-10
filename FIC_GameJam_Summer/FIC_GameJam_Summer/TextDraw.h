@@ -15,11 +15,12 @@ namespace TextDraw
 	enum class FontType
 	{
 		Default,	// DxLib標準フォント(指定なしの場合)
-		Title,		// タイトル・見出し用(Bell MT)
+		Title,		// タイトルロゴ・見出し用、大サイズ(Bell MT)
+		Score,		// スコア等の数値表示用、中サイズ(Bell MT)
 		Ui,			// ゲーム内UI用(HG教科書体)
 	};
 
-	// 起動時に一度だけ呼び出し、Title/Uiフォントを作成する
+	// 起動時に一度だけ呼び出し、Title/Score/Uiフォントを作成する
 	void InitFonts();
 
 	// 指定タイプのフォントハンドルを取得する(-1ならデフォルトフォント扱い)

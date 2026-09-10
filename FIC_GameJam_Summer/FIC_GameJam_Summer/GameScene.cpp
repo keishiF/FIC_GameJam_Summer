@@ -16,9 +16,9 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <DxLib.h>
 #include <iterator>
 #include <string>
+#include <DxLib.h>
 
 namespace
 {
@@ -39,8 +39,9 @@ namespace
 	// 1コマに使うフレーム数
 	constexpr int kBulletAnimFrameCount = 6;
 
-	// ステージごとの弾数上限
-	constexpr int kStageBulletLimits[] = { 21, 22, 23, 24 };
+	// ステージごとの弾数上限(インデックス0=ステージ1, 1=ステージ2, 2=ステージ3)
+	// ステージ3は5ウェーブ(敵13体)になったため他より多めにしています。お好みで調整してください
+	constexpr int kStageBulletLimits[] = { 21, 22, 30 };
 
 	// ウェーブ間の待機時間
 	constexpr int kWaveDelayFrame = 90;
@@ -73,9 +74,9 @@ namespace
 	constexpr float kLoopRadiusY = (kRowY[3] - kRowY[0]) / 2.0f;
 
 	// ステージ2 ウェーブ1: 画面上半分・下半分でそれぞれ円を描く敵の軌道パラメータ
-	constexpr float kWave1LoopRadius = 150.0f;								// 半径(ここを書き換えれば円の大きさを調整できる)
-	constexpr float kWave1UpperCenterY = kGridRowHeight;						// 画面上半分の中心Y
-	constexpr float kWave1LowerCenterY = Game::kScreenHeight - kGridRowHeight;	// 画面下半分の中心Y
+	constexpr float kWave1LoopRadius = 150.0f;
+	constexpr float kWave1UpperCenterY = kGridRowHeight;
+	constexpr float kWave1LowerCenterY = Game::kScreenHeight - kGridRowHeight;
 
 	// EnemyShooter同士が近づきすぎた場合に押し合う距離の余白
 	constexpr float kShooterRepulsionMargin = 20.0f;
@@ -88,9 +89,7 @@ namespace
 	constexpr float kUiIconScale = 4.0f;
 	constexpr int kUiMarginX = 20;
 	constexpr int kUiMarginY = 20;
-	// ハート同士の間隔
-	constexpr int kUiHeartSpacing = 60;	
-	// ハート行と弾薬行の縦間隔
+	constexpr int kUiHeartSpacing = 60;
 	constexpr int kUiRowSpacing = 60;
 
 #ifdef _DEBUG
@@ -393,18 +392,53 @@ void GameScene::BuildWaveData()
 		m_waves = { wave1, wave2, wave3 };
 		break;
 	}
-	default:
+	case 3:
 	{
-		// ステージ3・4のウェーブデータも決まり次第ここに追加する
-		// 仮でステージ1と同じ内容にしておく
-		WaveData tempWave;
-		tempWave.enemies = {
+		// ウェーブ1: ステージ1ウェーブ1と同じ内容
+		WaveData wave1;
+		wave1.enemies = {
 			{ EnemyType::Shooter, kEnemySpawnX, kRowY[1] },
 			{ EnemyType::Shooter, kEnemySpawnX, kRowY[2] },
 		};
-		m_waves = { tempWave };
+
+		// ウェーブ2: ステージ2ウェーブ2と同じ内容
+		WaveData wave2;
+		wave2.enemies = {
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, kPi },
+		};
+
+		// ウェーブ3: 右中央固定砲台1体 + Looper1体
+		WaveData wave3;
+		wave3.enemies = {
+			{ EnemyType::Shooter, kEnemySpawnX, kLoopCenterY, 0.0f, 0.0f, 0, 0.0f, true },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
+		};
+
+		// ウェーブ4: 右中央固定砲台1体 + Looper2体(ステージ2ウェーブ2と同じ配置)
+		WaveData wave4;
+		wave4.enemies = {
+			{ EnemyType::Shooter, kEnemySpawnX, kLoopCenterY, 0.0f, 0.0f, 0, 0.0f, true },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, kPi },
+		};
+
+		// ウェーブ5: グリッド中央2マスに固定砲台2体 + Looper2体
+		WaveData wave5;
+		wave5.enemies = {
+			{ EnemyType::Shooter, kEnemySpawnX, kRowY[1], 0.0f, 0.0f, 0, 0.0f, true },
+			{ EnemyType::Shooter, kEnemySpawnX, kRowY[2], 0.0f, 0.0f, 0, 0.0f, true },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, 0.0f },
+			{ EnemyType::Looper, kLoopCenterX, kLoopCenterY, kLoopRadiusX, kLoopRadiusY, 1, kPi },
+		};
+
+		m_waves = { wave1, wave2, wave3, wave4, wave5 };
 		break;
 	}
+	default:
+		// ステージは1~3のみ(呼び出し側の不具合を早期発見するためのassert)
+		assert(false && "不正なステージ番号です");
+		break;
 	}
 }
 
@@ -422,10 +456,15 @@ void GameScene::SpawnWave(int waveIndex)
 		switch (spawnInfo.type)
 		{
 		case EnemyType::Shooter:
-			// 移動可能範囲はグリッド全体
+		{
+			// isFixedがtrueなら移動範囲を出現Y座標だけに固定し、その場から動けない固定砲台にする
+			float minY = spawnInfo.isFixed ? spawnInfo.y : kRowY[0];
+			float maxY = spawnInfo.isFixed ? spawnInfo.y : kRowY[3];
+
 			m_enemies.push_back(std::make_unique<EnemyShooter>(
-				spawnInfo.x, spawnInfo.y, kRowY[0], kRowY[3], *m_player));
+				spawnInfo.x, spawnInfo.y, minY, maxY, *m_player));
 			break;
+		}
 
 		case EnemyType::Mover:
 			m_enemies.push_back(std::make_unique<EnemyMover>(
@@ -678,7 +717,7 @@ void GameScene::DrawUI() const
 		DrawExtendGraph(x, y, x + scaledHeartW, y + scaledHeartH, m_heartIconHandle, true);
 	}
 
-	// 弾薬アイコン + 残弾数(HG教科書体)
+	// 弾薬アイコン + 残弾数(Bell MTフォント)
 	int ammoWidth = 0;
 	int ammoHeight = 0;
 	GetGraphSize(m_ammoIconHandle, &ammoWidth, &ammoHeight);
@@ -691,7 +730,7 @@ void GameScene::DrawUI() const
 
 	DrawExtendGraph(ammoIconX, ammoIconY, ammoIconX + scaledAmmoW, ammoIconY + scaledAmmoH, m_ammoIconHandle, true);
 
-	TextDraw::DrawFormatOutlinedText(ammoIconX + scaledAmmoW + 10, ammoIconY, 0xffffff, 0x000000, TextDraw::FontType::Ui, "×  %d", m_remainingBullets);
+	TextDraw::DrawFormatOutlinedText(ammoIconX + scaledAmmoW + 10, ammoIconY - 30, 0xffffff, 0x000000, TextDraw::FontType::Title, "×  %d", m_remainingBullets);
 }
 
 void GameScene::NormalDraw()
@@ -723,16 +762,6 @@ void GameScene::NormalDraw()
 	DrawUI();
 
 #ifdef _DEBUG
-	/*if ((m_blinkFrame / 30) % 2 == 0)
-	{
-		DrawString(0, 0, "Game Scene", 0xffffff);
-	}
-
-	DrawFormatString(0, 20, 0xffffff, "残弾: %d", m_remainingBullets);
-	DrawFormatString(0, 40, 0xffffff, "HP: %d", m_player->GetHp());
-	DrawFormatString(0, 60, 0xffffff, "Wave: %d / %d", m_currentWaveIndex + 1, static_cast<int>(m_waves.size()));
-	DrawFormatString(0, 80, 0xffffff, "Enemies: %d", static_cast<int>(m_enemies.size()));*/
-
 	// 当たり判定デバッグ表示(緑:プレイヤー 赤:敵 水色:自弾 黄:敵弾)
 	DrawCollisionBox(m_player->GetX(), m_player->GetY(), m_player->GetCollisionHalfWidth(), m_player->GetCollisionHalfHeight(), 0x00ff00);
 

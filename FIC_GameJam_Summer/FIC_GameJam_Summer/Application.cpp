@@ -30,7 +30,11 @@ bool Application::Init()
 	// 描画先を裏画面にする
 	SetDrawScreen(DX_SCREEN_BACK);
 
+	// タイトル・UI用フォントを準備する
 	TextDraw::InitFonts();
+
+	// 乱数の種を現在時刻で初期化する(これが無いと毎回同じ乱数列になる)
+	SRand(static_cast<int>(GetNowCount()));
 
 	return true;
 }
@@ -77,5 +81,6 @@ void Application::Run()
 
 void Application::Terminate()
 {
+	TextDraw::Terminate();
 	DxLib_End();				// ＤＸライブラリ使用の終了処理
 }

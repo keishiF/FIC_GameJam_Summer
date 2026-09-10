@@ -10,11 +10,14 @@ namespace
 	constexpr int kTitleFontSize = 72;
 	constexpr int kTitleFontThick = 6;
 
+	constexpr int kScoreFontSize = 40;	// スコア数値用(Titleより小さめ)
+	constexpr int kScoreFontThick = 5;
+
 	constexpr int kUiFontSize = 28;
 	constexpr int kUiFontThick = 4;
 
-	// [0]:Default(未使用、常に-1) [1]:Title [2]:Ui
-	int s_fontHandles[3] = { -1, -1, -1 };
+	// [0]:Default(未使用、常に-1) [1]:Title [2]:Score [3]:Ui
+	int s_fontHandles[4] = { -1, -1, -1, -1 };
 
 	int GetIndex(TextDraw::FontType type)
 	{
@@ -27,6 +30,7 @@ namespace TextDraw
 	void InitFonts()
 	{
 		s_fontHandles[GetIndex(FontType::Title)] = CreateFontToHandle("Bell MT", kTitleFontSize, kTitleFontThick, DX_FONTTYPE_ANTIALIASING);
+		s_fontHandles[GetIndex(FontType::Score)] = CreateFontToHandle("Bell MT", kScoreFontSize, kScoreFontThick, DX_FONTTYPE_ANTIALIASING);
 		s_fontHandles[GetIndex(FontType::Ui)] = CreateFontToHandle("HG教科書体", kUiFontSize, kUiFontThick, DX_FONTTYPE_ANTIALIASING);
 
 		// 生成に失敗した場合(フォント未インストールなど)は-1のままとなり、DxLib標準フォントに自動的にフォールバックする

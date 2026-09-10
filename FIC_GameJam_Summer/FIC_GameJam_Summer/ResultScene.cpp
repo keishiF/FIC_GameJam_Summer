@@ -36,15 +36,22 @@ namespace
 	constexpr int kPtGapX = 15;			// 数値の右端から"pt"までの隙間
 
 	constexpr int kLineStartY = 220;
-	constexpr int kLineHeight = 60;
-	constexpr int kTotalExtraGap = 40;		// 合計行の前に空ける追加の余白
+	constexpr int kLineHeight = 70;		// Scoreフォント(サイズ40)に合わせて少し広げた
+	constexpr int kTotalExtraGap = 30;		// 合計行の前に空ける追加の余白
+	constexpr int kLabelYNudge = 8;			// ラベル(小さいフォント)を値(大きいフォント)と縦中央っぽく揃えるための微調整
 
 	constexpr unsigned int kTextColor = 0xffffff;
 	constexpr unsigned int kEdgeColor = 0x000000;
 
-	void DrawScoreLine(int y, const char* label, int score, bool withPlusSign, TextDraw::FontType fontType)
+	// ラベル + 右揃え数値 + "pt" の1行を描画する
+	// labelFontType: ラベル部分に使うフォント, valueFontType: 数値+ptに使うフォント
+	void DrawScoreLine(int y, const char* label, int score, bool withPlusSign,
+		TextDraw::FontType labelFontType, TextDraw::FontType valueFontType)
 	{
-		TextDraw::DrawOutlinedText(kLabelX, y, label, kTextColor, kEdgeColor, fontType);
+		// ラベルは値より小さいフォントの場合が多いので、少し下にずらして視覚的な中心を合わせる
+		int labelY = (valueFontType != TextDraw::FontType::Default) ? y + kLabelYNudge : y;
+
+		TextDraw::DrawOutlinedText(kLabelX, labelY, label, kTextColor, kEdgeColor, labelFontType);
 
 		char valueText[32];
 		if (withPlusSign)
@@ -56,10 +63,10 @@ namespace
 			snprintf(valueText, sizeof(valueText), "%d", score);
 		}
 
-		int valueWidth = TextDraw::GetTextWidth(valueText, fontType);
-		TextDraw::DrawOutlinedText(kValueRightX - valueWidth, y, valueText, kTextColor, kEdgeColor, fontType);
+		int valueWidth = TextDraw::GetTextWidth(valueText, valueFontType);
+		TextDraw::DrawOutlinedText(kValueRightX - valueWidth, y, valueText, kTextColor, kEdgeColor, valueFontType);
 
-		TextDraw::DrawOutlinedText(kValueRightX + kPtGapX, y, "pt", kTextColor, kEdgeColor, fontType);
+		TextDraw::DrawOutlinedText(kValueRightX + kPtGapX, y, "pt", kTextColor, kEdgeColor, valueFontType);
 	}
 }
 
@@ -156,35 +163,36 @@ void ResultScene::NormalDraw()
 	unsigned int bgColor = m_isClear ? 0x002040 : 0x400000;
 	DrawBox(0, 0, Game::kScreenWidth, Game::kScreenHeight, bgColor, true);
 
-	// タイトルはBell MTフォント、中央揃え
+	// タイトルはBell MTフォント(大)、中央揃え ※変更なし
 	const char* titleText = m_isClear ? "STAGE CLEAR" : "GAME OVER";
 	int titleWidth = TextDraw::GetTextWidth(titleText, TextDraw::FontType::Title);
 	TextDraw::DrawOutlinedText((Game::kScreenWidth - titleWidth) / 2, kTitleY, titleText, kTextColor, kEdgeColor, TextDraw::FontType::Title);
 
-	// 基礎点(クリア/クリアならず)は常に表示(標準フォント)
+	// 基礎点(クリア/クリアならず): ラベルはデフォルト、数値+ptはBell MT(Scoreサイズ)
 	const char* baseLabel = m_isClear ? "クリア" : "クリアならず";
-	DrawScoreLine(kLineStartY, baseLabel, m_baseScore, false, TextDraw::FontType::Default);
+	DrawScoreLine(kLineStartY, baseLabel, m_baseScore, false, TextDraw::FontType::Default, TextDraw::FontType::Score);
 
 	if (m_resultPhase >= kPhaseHpScore)
 	{
-		// 残り体力: HG教科書体
-		DrawScoreLine(kLineStartY + kLineHeight, "残り体力", m_hpScore, true, TextDraw::FontType::Ui);
+		// 残り体力: ラベルはデフォルト、数値+ptはBell MT(Scoreサイズ)
+		DrawScoreLine(kLineStartY + kLineHeight, "残り体力", m_hpScore, true, TextDraw::FontType::Default, TextDraw::FontType::Score);
 	}
 
 	if (m_resultPhase >= kPhaseBulletScore)
 	{
-		// 残弾数: HG教科書体
-		DrawScoreLine(kLineStartY + kLineHeight * 2, "残弾数", m_bulletScore, true, TextDraw::FontType::Ui);
+		// 残弾数: ラベルはデフォルト、数値+ptはBell MT(Scoreサイズ)
+		DrawScoreLine(kLineStartY + kLineHeight * 2, "残弾数", m_bulletScore, true, TextDraw::FontType::Default, TextDraw::FontType::Score);
 	}
 
 	if (m_resultPhase >= kPhaseTotalScore)
 	{
 		int totalY = kLineStartY + kLineHeight * 3 + kTotalExtraGap;
-		DrawScoreLine(totalY, "合計", m_totalScore, false, TextDraw::FontType::Default);
+		// 合計: ラベルはデフォルト、数値+ptはBell MT(Scoreサイズ)
+		DrawScoreLine(totalY, "合計", m_totalScore, false, TextDraw::FontType::Default, TextDraw::FontType::Score);
 
 		if ((m_blinkFrame / 30) % 2 == 0)
 		{
-			const char* pressText = "Press OK";
+			const char* pressText = "PRESS A BUTTON";
 			int pressWidth = TextDraw::GetTextWidth(pressText);
 			TextDraw::DrawOutlinedText((Game::kScreenWidth - pressWidth) / 2, totalY + 80, pressText, kTextColor, kEdgeColor);
 		}

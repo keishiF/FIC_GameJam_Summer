@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "SceneBase.h"
+#include <vector>
 
 class StageSelectScene final : public SceneBase
 {
@@ -11,7 +12,13 @@ public:
 	virtual void Draw() override;
 
 private:
+	int m_bgHandle;
 	int m_playerHandle;
+
+	int m_stickIconHandle;       // 「移動」ヒント用アイコン(左スティック)
+	int m_aButtonIconHandle;     // 「決定」ヒント用アイコン(Aボタン)
+	std::vector<int> m_stageIconHandle;  // 各ステージのアイコン画像(要素数 = ステージ数)
+
 	float m_playerX;	// 見た目の現在位置
 	float m_playerY;
 
@@ -44,4 +51,6 @@ private:
 
 	// プレイヤーの見た目位置を選択中ステージへ近づける
 	void UpdatePlayerPosition();
+
+	void DrawControlHints();
 };
