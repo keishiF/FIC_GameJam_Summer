@@ -4,6 +4,7 @@
 #include "SceneController.h"
 #include "StageSelectScene.h"
 #include "TextDraw.h"
+#include "AudioManager.h"
 #include <cstdio>
 #include <DxLib.h>
 
@@ -88,6 +89,16 @@ ResultScene::ResultScene(SceneController& controller, bool isClear, int hp, int 
 	m_draw(&ResultScene::FadeDraw)
 {
 	CalcScore();
+
+	// 結果画面のBGMを再生
+	if (m_isClear)
+	{
+		AudioManager::GetInstance().PlayBGM(AudioManager::BGM::Clear);
+	}
+	else
+	{
+		AudioManager::GetInstance().PlayBGM(AudioManager::BGM::GameOver);
+	}
 }
 
 ResultScene::~ResultScene()

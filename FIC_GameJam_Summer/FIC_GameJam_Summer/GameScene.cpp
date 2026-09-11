@@ -13,6 +13,7 @@
 #include "SceneController.h"
 #include "TextDraw.h"
 #include "TitleScene.h"
+#include "AudioManager.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -186,6 +187,9 @@ GameScene::GameScene(SceneController& controller, int stageNo) :
 
 	BuildWaveData();
 	SpawnWave(m_currentWaveIndex);
+
+	// BGM再生(ステージ中はBattleBGM)
+	AudioManager::GetInstance().PlayBGM(AudioManager::BGM::Battle);
 }
 
 GameScene::~GameScene()
@@ -494,6 +498,9 @@ void GameScene::TryShoot()
 
 	m_bullets.push_back(std::make_unique<Bullet>(m_player->GetX(), m_player->GetY(), m_playerBulletAnimHandles));
 	--m_remainingBullets;
+
+	// プレイヤー射撃時の効果音
+	AudioManager::GetInstance().PlayShotSE();
 }
 
 void GameScene::UpdateBullets()

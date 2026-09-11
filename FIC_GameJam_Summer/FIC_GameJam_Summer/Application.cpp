@@ -3,6 +3,7 @@
 #include "Input.h"
 #include "SceneController.h"
 #include "TextDraw.h"
+#include "AudioManager.h"
 #include <cassert>
 #include <DxLib.h>
 
@@ -35,6 +36,9 @@ bool Application::Init()
 
 	// 乱数の種を現在時刻で初期化する(これが無いと毎回同じ乱数列になる)
 	SRand(static_cast<int>(GetNowCount()));
+
+	// オーディオを初期化
+	AudioManager::GetInstance().Init();
 
 	return true;
 }

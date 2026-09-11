@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstring>
 #include <DxLib.h>
+#include "AudioManager.h"
 
 namespace
 {
@@ -76,6 +77,9 @@ StageSelectScene::StageSelectScene(SceneController& controller) :
 	}
 
 	m_playerX = GetStageCenterX(m_selectStage);
+
+	// ステージ選択はタイトルBGMを使用
+	AudioManager::GetInstance().PlayBGM(AudioManager::BGM::Title);
 }
 
 StageSelectScene::~StageSelectScene()

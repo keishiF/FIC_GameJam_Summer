@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <DxLib.h>
+#include "AudioManager.h"
 
 namespace
 {
@@ -90,6 +91,9 @@ TitleScene::TitleScene(SceneController& controller) :
 
 	m_enemyActor = std::make_unique<TitleBattleActor>(
 		kEnemyActorX, Game::kScreenHeight / 2.0f, kActorMoveMinY, kActorMoveMaxY, enemyHandle, kActorScale);
+
+	// タイトル画面はTitleBGMを再生
+	AudioManager::GetInstance().PlayBGM(AudioManager::BGM::Title);
 }
 
 TitleScene::~TitleScene()
