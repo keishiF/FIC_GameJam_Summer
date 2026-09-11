@@ -41,7 +41,7 @@ namespace
 
 	// ステージごとの弾数上限(インデックス0=ステージ1, 1=ステージ2, 2=ステージ3)
 	// ステージ3は5ウェーブ(敵13体)になったため他より多めにしています。お好みで調整してください
-	constexpr int kStageBulletLimits[] = { 21, 22, 30 };
+	constexpr int kStageBulletLimits[] = { 15, 10, 25 };
 
 	// ウェーブ間の待機時間
 	constexpr int kWaveDelayFrame = 90;
